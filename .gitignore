@@ -1,0 +1,22 @@
+# --- Python / Backend ---
+backend/3D/
+backend/__pycache__/
+backend/*.py[cod]
+backend/*$py.class
+backend/.env
+
+# --- Node / Frontend ---
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.*.local
+
+# --- OS / IDE Secrets ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# --- Large/Generated Files (Optional) ---
+# If your project saves processed 3D models locally, add the directory here
+# backend/output/
