@@ -72,39 +72,39 @@
       #gradient-blob::before {
         content: '';
         position: absolute;
-        width: 700px;
-        height: 700px;
+        width: 1100px;
+        height: 1100px;
         border-radius: 50%;
         background: radial-gradient(
-          ellipse at center,
-          rgba(180, 120, 255, 0.55) 0%,
-          rgba(140, 80, 220, 0.35) 25%,
-          rgba(100, 60, 180, 0.18) 50%,
-          transparent 70%
+          circle at center,
+          rgba(150, 80, 255, 0.28) 0%,
+          rgba(120, 60, 220, 0.16) 30%,
+          rgba(90, 40, 180, 0.07) 58%,
+          transparent 72%
         );
         transform: translate(-50%, -50%);
-        filter: blur(40px);
+        filter: blur(80px);
         left: var(--mx, 50%);
         top: var(--my, 50%);
-        will-change: left, top;
+        will-change: transform, left, top;
       }
       #gradient-blob::after {
         content: '';
         position: absolute;
-        width: 350px;
-        height: 350px;
+        width: 500px;
+        height: 500px;
         border-radius: 50%;
         background: radial-gradient(
-          ellipse at center,
-          rgba(220, 160, 255, 0.65) 0%,
-          rgba(160, 100, 240, 0.42) 35%,
-          transparent 65%
+          circle at center,
+          rgba(180, 100, 255, 0.22) 0%,
+          rgba(140, 70, 230, 0.11) 40%,
+          transparent 68%
         );
         transform: translate(-50%, -50%);
-        filter: blur(18px);
+        filter: blur(50px);
         left: var(--mx2, 50%);
         top: var(--my2, 50%);
-        will-change: left, top;
+        will-change: transform, left, top;
       }
       #page-home,
       #page-about {
@@ -455,6 +455,466 @@
         width: 28px;
         height: 1px;
         background: var(--lilac);
+      }
+      .hero-spline-robot {
+        position: absolute;
+        right: 15%;
+        top: 70%;
+        transform: translateY(-52%);
+        width: 400px;
+        height: 520px;
+        z-index: 5;
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .css-robot {
+        position: relative;
+        width: 230px;
+        height: 460px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        animation: robotFloat 4s ease-in-out infinite;
+        transform-origin: center bottom;
+        scale: 1.28;
+      }
+      @keyframes robotFloat {
+        0%,
+        100% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-18px);
+        }
+      }
+      .robot-glow {
+        position: absolute;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(160, 80, 255, 0.22) 0%,
+          transparent 70%
+        );
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        animation: robotGlowPulse 3s ease-in-out infinite;
+        pointer-events: none;
+      }
+      @keyframes robotGlowPulse {
+        0%,
+        100% {
+          opacity: 0.6;
+          transform: translate(-50%, -50%) scale(1);
+        }
+        50% {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1.15);
+        }
+      }
+      .robot-body-wrap {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+      }
+      .robot-antenna {
+        width: 3px;
+        height: 28px;
+        background: linear-gradient(
+          to top,
+          rgba(183, 168, 191, 0.6),
+          rgba(200, 160, 255, 0.9)
+        );
+        position: absolute;
+        top: -32px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 2px;
+      }
+      .robot-antenna-tip {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: rgba(200, 140, 255, 1);
+        box-shadow:
+          0 0 12px 4px rgba(180, 100, 255, 0.8),
+          0 0 24px 8px rgba(140, 60, 255, 0.4);
+        position: absolute;
+        top: -44px;
+        left: 50%;
+        transform: translateX(-50%);
+        animation: antennaBlink 2s ease-in-out infinite;
+      }
+      @keyframes antennaBlink {
+        0%,
+        100% {
+          opacity: 1;
+          box-shadow:
+            0 0 12px 4px rgba(180, 100, 255, 0.8),
+            0 0 24px 8px rgba(140, 60, 255, 0.4);
+        }
+        50% {
+          opacity: 0.3;
+          box-shadow: 0 0 4px 2px rgba(180, 100, 255, 0.3);
+        }
+      }
+      .robot-head {
+        width: 88px;
+        height: 80px;
+        background: linear-gradient(
+          145deg,
+          rgba(55, 45, 75, 0.95),
+          rgba(35, 28, 52, 0.98)
+        );
+        border-radius: 18px 18px 14px 14px;
+        border: 1px solid rgba(183, 168, 191, 0.25);
+        box-shadow:
+          0 0 20px rgba(140, 80, 255, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 0;
+        flex-shrink: 0;
+      }
+      .robot-visor {
+        width: 64px;
+        height: 28px;
+        background: linear-gradient(
+          135deg,
+          rgba(20, 15, 35, 0.95),
+          rgba(10, 8, 20, 0.98)
+        );
+        border-radius: 8px;
+        border: 1px solid rgba(140, 80, 255, 0.4);
+        box-shadow:
+          inset 0 0 12px rgba(120, 60, 255, 0.3),
+          0 0 8px rgba(120, 60, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        padding: 0 10px;
+      }
+      .robot-eye {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 35% 35%,
+          rgba(220, 180, 255, 1),
+          rgba(160, 80, 255, 0.9)
+        );
+        box-shadow: 0 0 8px 3px rgba(180, 100, 255, 0.7);
+        animation: eyeGlow 3s ease-in-out infinite;
+      }
+      .robot-eye.right {
+        animation-delay: 0.4s;
+      }
+      @keyframes eyeGlow {
+        0%,
+        100% {
+          box-shadow: 0 0 8px 3px rgba(180, 100, 255, 0.7);
+          opacity: 1;
+        }
+        50% {
+          box-shadow: 0 0 14px 5px rgba(200, 120, 255, 0.9);
+          opacity: 0.85;
+        }
+      }
+      .robot-neck {
+        width: 28px;
+        height: 14px;
+        background: linear-gradient(
+          to bottom,
+          rgba(45, 38, 62, 0.9),
+          rgba(35, 28, 52, 0.95)
+        );
+        border-left: 1px solid rgba(183, 168, 191, 0.15);
+        border-right: 1px solid rgba(183, 168, 191, 0.15);
+        flex-shrink: 0;
+      }
+      .robot-torso {
+        width: 110px;
+        height: 120px;
+        background: linear-gradient(
+          145deg,
+          rgba(52, 42, 72, 0.95),
+          rgba(32, 25, 50, 0.98)
+        );
+        border-radius: 14px 14px 10px 10px;
+        border: 1px solid rgba(183, 168, 191, 0.2);
+        box-shadow:
+          0 4px 24px rgba(100, 50, 200, 0.18),
+          inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .robot-chest-panel {
+        width: 56px;
+        height: 72px;
+        background: rgba(20, 15, 35, 0.7);
+        border-radius: 8px;
+        border: 1px solid rgba(140, 80, 255, 0.25);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-around;
+        padding: 8px 0;
+      }
+      .robot-core {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 35% 35%,
+          rgba(200, 150, 255, 0.9),
+          rgba(120, 60, 220, 0.8)
+        );
+        box-shadow: 0 0 10px 4px rgba(160, 80, 255, 0.6);
+        animation: corePulse 2s ease-in-out infinite;
+      }
+      @keyframes corePulse {
+        0%,
+        100% {
+          box-shadow: 0 0 10px 4px rgba(160, 80, 255, 0.6);
+          transform: scale(1);
+        }
+        50% {
+          box-shadow: 0 0 18px 7px rgba(180, 100, 255, 0.8);
+          transform: scale(1.08);
+        }
+      }
+      .robot-vent {
+        width: 36px;
+        height: 4px;
+        background: rgba(140, 80, 255, 0.3);
+        border-radius: 2px;
+        border: 1px solid rgba(140, 80, 255, 0.2);
+      }
+      .robot-shoulder {
+        position: absolute;
+        width: 22px;
+        height: 28px;
+        background: linear-gradient(
+          145deg,
+          rgba(60, 50, 82, 0.95),
+          rgba(40, 32, 60, 0.98)
+        );
+        border-radius: 6px;
+        border: 1px solid rgba(183, 168, 191, 0.18);
+        top: 10px;
+      }
+      .robot-shoulder.left {
+        left: -14px;
+        border-radius: 8px 4px 4px 8px;
+      }
+      .robot-shoulder.right {
+        right: -14px;
+        border-radius: 4px 8px 8px 4px;
+      }
+      .robot-arm {
+        position: absolute;
+        width: 18px;
+        height: 70px;
+        background: linear-gradient(
+          to bottom,
+          rgba(50, 40, 70, 0.95),
+          rgba(38, 30, 58, 0.95)
+        );
+        border-radius: 6px;
+        border: 1px solid rgba(183, 168, 191, 0.15);
+        top: 32px;
+      }
+      .robot-arm.left {
+        left: -26px;
+        transform-origin: top center;
+        animation: armSwingLeft 4s ease-in-out infinite;
+      }
+      .robot-arm.right {
+        right: -26px;
+        transform-origin: top center;
+        animation: armSwingRight 4s ease-in-out infinite;
+      }
+      @keyframes armSwingLeft {
+        0%,
+        100% {
+          transform: rotate(-8deg);
+        }
+        50% {
+          transform: rotate(8deg);
+        }
+      }
+      @keyframes armSwingRight {
+        0%,
+        100% {
+          transform: rotate(8deg);
+        }
+        50% {
+          transform: rotate(-8deg);
+        }
+      }
+      .robot-forearm {
+        position: absolute;
+        width: 16px;
+        height: 38px;
+        background: linear-gradient(
+          to bottom,
+          rgba(45, 36, 65, 0.95),
+          rgba(35, 27, 54, 0.95)
+        );
+        border-radius: 4px;
+        border: 1px solid rgba(183, 168, 191, 0.12);
+        bottom: -36px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      .robot-hand {
+        position: absolute;
+        width: 20px;
+        height: 18px;
+        background: linear-gradient(
+          145deg,
+          rgba(55, 44, 76, 0.95),
+          rgba(38, 30, 58, 0.95)
+        );
+        border-radius: 5px;
+        border: 1px solid rgba(183, 168, 191, 0.18);
+        bottom: -56px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      .robot-waist {
+        width: 80px;
+        height: 12px;
+        background: linear-gradient(
+          to bottom,
+          rgba(40, 32, 58, 0.95),
+          rgba(30, 24, 46, 0.95)
+        );
+        border-left: 1px solid rgba(183, 168, 191, 0.12);
+        border-right: 1px solid rgba(183, 168, 191, 0.12);
+        flex-shrink: 0;
+      }
+      .robot-hips {
+        width: 100px;
+        height: 22px;
+        background: linear-gradient(
+          145deg,
+          rgba(48, 38, 66, 0.95),
+          rgba(32, 25, 50, 0.95)
+        );
+        border-radius: 8px 8px 4px 4px;
+        border: 1px solid rgba(183, 168, 191, 0.18);
+        display: flex;
+        justify-content: space-around;
+        align-items: flex-end;
+        flex-shrink: 0;
+        position: relative;
+      }
+      .robot-leg {
+        width: 32px;
+        height: 80px;
+        background: linear-gradient(
+          to bottom,
+          rgba(48, 38, 66, 0.95),
+          rgba(35, 27, 54, 0.95)
+        );
+        border-radius: 6px 6px 4px 4px;
+        border: 1px solid rgba(183, 168, 191, 0.15);
+        position: absolute;
+        top: 18px;
+      }
+      .robot-leg.left {
+        left: 10px;
+        animation: legLeft 4s ease-in-out infinite;
+        transform-origin: top center;
+      }
+      .robot-leg.right {
+        right: 10px;
+        animation: legRight 4s ease-in-out infinite;
+        transform-origin: top center;
+      }
+      @keyframes legLeft {
+        0%,
+        100% {
+          transform: rotate(4deg);
+        }
+        50% {
+          transform: rotate(-4deg);
+        }
+      }
+      @keyframes legRight {
+        0%,
+        100% {
+          transform: rotate(-4deg);
+        }
+        50% {
+          transform: rotate(4deg);
+        }
+      }
+      .robot-shin {
+        position: absolute;
+        width: 28px;
+        height: 40px;
+        background: linear-gradient(
+          to bottom,
+          rgba(42, 33, 60, 0.95),
+          rgba(32, 25, 50, 0.95)
+        );
+        border-radius: 4px;
+        border: 1px solid rgba(183, 168, 191, 0.1);
+        bottom: -38px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      .robot-foot {
+        position: absolute;
+        width: 36px;
+        height: 14px;
+        background: linear-gradient(
+          145deg,
+          rgba(50, 40, 70, 0.95),
+          rgba(35, 27, 55, 0.95)
+        );
+        border-radius: 4px 4px 6px 6px;
+        border: 1px solid rgba(183, 168, 191, 0.18);
+        bottom: -54px;
+        left: 50%;
+        transform: translateX(-50%);
+        box-shadow: 0 4px 10px rgba(100, 50, 200, 0.2);
+      }
+      .robot-shadow {
+        width: 100px;
+        height: 18px;
+        background: radial-gradient(
+          ellipse,
+          rgba(100, 50, 200, 0.25) 0%,
+          transparent 70%
+        );
+        border-radius: 50%;
+        margin-top: 8px;
+        animation: shadowPulse 4s ease-in-out infinite;
+      }
+      @keyframes shadowPulse {
+        0%,
+        100% {
+          transform: scaleX(1);
+          opacity: 0.6;
+        }
+        50% {
+          transform: scaleX(0.75);
+          opacity: 0.3;
+        }
       }
       .hero-title {
         font-family: 'Bebas Neue', sans-serif;
@@ -1952,6 +2412,52 @@
         </div>
         <div class="hero-overlay"></div>
         <div class="hero-watermark">3D</div>
+        <div class="hero-spline-robot" id="hero-robot">
+          <div class="css-robot" id="css-robot">
+            <div class="robot-glow"></div>
+            <div class="robot-body-wrap">
+              <div class="robot-head">
+                <div class="robot-visor">
+                  <div class="robot-eye left"></div>
+                  <div class="robot-eye right"></div>
+                </div>
+                <div class="robot-antenna"></div>
+                <div class="robot-antenna-tip"></div>
+              </div>
+              <div class="robot-neck"></div>
+              <div class="robot-torso">
+                <div class="robot-chest-panel">
+                  <div class="robot-core"></div>
+                  <div class="robot-vent"></div>
+                  <div class="robot-vent"></div>
+                  <div class="robot-vent"></div>
+                </div>
+                <div class="robot-shoulder left"></div>
+                <div class="robot-shoulder right"></div>
+                <div class="robot-arm left">
+                  <div class="robot-forearm left"></div>
+                  <div class="robot-hand left"></div>
+                </div>
+                <div class="robot-arm right">
+                  <div class="robot-forearm right"></div>
+                  <div class="robot-hand right"></div>
+                </div>
+              </div>
+              <div class="robot-waist"></div>
+              <div class="robot-hips">
+                <div class="robot-leg left">
+                  <div class="robot-shin left"></div>
+                  <div class="robot-foot left"></div>
+                </div>
+                <div class="robot-leg right">
+                  <div class="robot-shin right"></div>
+                  <div class="robot-foot right"></div>
+                </div>
+              </div>
+            </div>
+            <div class="robot-shadow"></div>
+          </div>
+        </div>
         <div class="hero-content">
           <div class="hero-eyebrow">AI-Powered 3D Reconstruction</div>
           <h1 class="hero-title">
@@ -2775,10 +3281,10 @@
         tby = e.clientY
       })
       ;(function blobLoop() {
-        bx1 += (tbx - bx1) * 0.1
-        by1 += (tby - by1) * 0.1
-        bx2 += (tbx - bx2) * 0.045
-        by2 += (tby - by2) * 0.045
+        bx1 += (tbx - bx1) * 0.06
+        by1 += (tby - by1) * 0.06
+        bx2 += (tbx - bx2) * 0.025
+        by2 += (tby - by2) * 0.025
         blobEl.style.setProperty('--mx', bx1 + 'px')
         blobEl.style.setProperty('--my', by1 + 'px')
         blobEl.style.setProperty('--mx2', bx2 + 'px')
@@ -2793,9 +3299,9 @@
       const bgCtx = bgCanvas.getContext('2d')
 
       const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789IMAGECAD3D'
-      const CW = 18,
-        CH = 22
-      const RADIUS = 16
+      const CW = 22,
+        CH = 26
+      const RADIUS = 14
 
       let cols, rows, cells
       let mgx = -999,
@@ -2824,59 +3330,71 @@
       })
 
       let lt = 0
+      let frameSkip = 0
       function drawGrid(ts) {
+        frameSkip++
+        if (frameSkip % 2 !== 0) {
+          requestAnimationFrame(drawGrid)
+          return
+        }
+
         const dt = Math.min(ts - lt, 50)
         lt = ts
         bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height)
         bgCtx.font = '400 ' + Math.round(CH * 0.62) + "px 'DM Mono', monospace"
         bgCtx.textBaseline = 'top'
 
+        const mgxf = mgx,
+          mgyf = mgy
+        const RAD2 = RADIUS * RADIUS
+
         for (let r = 0; r < rows; r++) {
           for (let c = 0; c < cols; c++) {
             const cell = cells[r][c]
-            const dc = c - mgx,
-              dr = r - mgy
-            const dist = Math.sqrt(dc * dc + dr * dr)
+            const dc = c - mgxf
+            const dr = r - mgyf
+            const dist2 = dc * dc + dr * dr
 
             let glow = 0
-            if (dist < RADIUS) {
-              const t = 1 - dist / RADIUS
+            if (dist2 < RAD2) {
+              const t = 1 - Math.sqrt(dist2) / RADIUS
               glow = t * t * (3 - 2 * t) * 1.4
             }
 
             cell.swap -= dt
             if (cell.swap <= 0) {
               cell.ch = CHARS[Math.floor(Math.random() * CHARS.length)]
-              if (dist < RADIUS * 0.65) {
+              if (dist2 < RAD2 * 0.42) {
                 cell.target = 0.45 + Math.random() * 0.45
                 cell.swap = 40 + Math.random() * 100
               } else {
                 cell.target = 0.04 + Math.random() * 0.07
-                cell.swap = 500 + Math.random() * 2000
+                cell.swap = 600 + Math.random() * 2400
               }
             }
 
-            cell.vel += (cell.target - cell.bright) * 0.005
-            cell.vel *= 0.86
+            cell.vel += (cell.target - cell.bright) * 0.004
+            cell.vel *= 0.84
             cell.bright += cell.vel
 
             const alpha = Math.min(0.98, cell.bright + glow * 0.6)
-            if (alpha < 0.01) continue
+            if (alpha < 0.012) continue
 
-            let R, G, B
             if (glow > 0.08) {
-              const s = Math.sin(ts * 0.0008 + c * 0.22 + r * 0.28)
-              R = Math.round(168 + s * 30)
-              G = Math.round(108 + s * 18)
-              B = Math.round(248 - s * 14)
+              const s = Math.sin(ts * 0.0007 + c * 0.22 + r * 0.28)
+              bgCtx.fillStyle =
+                'rgba(' +
+                Math.round(168 + s * 30) +
+                ',' +
+                Math.round(108 + s * 18) +
+                ',' +
+                Math.round(248 - s * 14) +
+                ',' +
+                alpha.toFixed(2) +
+                ')'
             } else {
-              R = 152
-              G = 122
-              B = 192
+              bgCtx.fillStyle = 'rgba(152,122,192,' + alpha.toFixed(2) + ')'
             }
-
-            bgCtx.fillStyle =
-              'rgba(' + R + ',' + G + ',' + B + ',' + alpha.toFixed(3) + ')'
             bgCtx.fillText(cell.ch, c * CW, r * CH)
           }
         }
@@ -2926,6 +3444,7 @@
       addEventListener('scroll', doReveal, { passive: true })
       doReveal()
     </script>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
