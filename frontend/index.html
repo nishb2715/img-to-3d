@@ -1,295 +1,2942 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ImageCAD AI</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #0a0a0f; --surface: #12121a; --border: #2a2a3a;
-      --accent: #7c3aed; --accent2: #06b6d4; --text: #e8e8f0;
-      --muted: #6b6b8a; --success: #10b981; --error: #ef4444;
-    }
-    body { background:var(--bg); color:var(--text); font-family:'Syne',sans-serif; min-height:100vh; display:flex; flex-direction:column; }
-    header { padding:0.8rem 1.5rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:1rem; background:var(--surface); }
-    .logo { font-size:1.2rem; font-weight:800; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-    .badge { font-family:'Space Mono',monospace; font-size:0.6rem; background:var(--accent); color:white; padding:2px 8px; border-radius:999px; }
-    .header-right { margin-left:auto; display:flex; gap:0.5rem; align-items:center; }
-    .btn-sm { background:var(--border); color:var(--text); border:none; border-radius:6px; padding:0.3rem 0.7rem; font-size:0.7rem; cursor:pointer; font-family:'Space Mono',monospace; transition:all 0.2s; }
-    .btn-sm:hover { background:#3a3a4a; }
-    .btn-sm.green { background:#059669; color:white; }
-    .btn-sm.green:hover { background:#047857; }
-    .btn-sm:disabled { opacity:0.4; cursor:not-allowed; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ImageCAD AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --plum: #8b7a92;
+        --lilac: #b7a8bf;
+        --lilac-bright: #cfc0d8;
+        --apricot: #dcc3b8;
+        --chiffon: #e6e0d9;
+        --sage: #b8c7b3;
+        --forest: #6e7c6c;
+        --dark: #0f0d12;
+        --dark2: #16131c;
+        --dark3: #1e1a28;
+        --dark4: #241f30;
+        --border-dark: rgba(183, 168, 191, 0.1);
+        --border-mid: rgba(183, 168, 191, 0.2);
+        --border-bright: rgba(183, 168, 191, 0.32);
+        --text: #f0ecf5;
+        --muted: rgba(220, 210, 230, 0.5);
+        --muted2: rgba(220, 210, 230, 0.35);
+        --error: #b05050;
+        --accent: #9b8aa8;
+      }
+      html,
+      body {
+        height: 100%;
+        scroll-behavior: smooth;
+      }
+      body {
+        background: var(--dark);
+        color: var(--text);
+        font-family: 'DM Sans', sans-serif;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
 
-    .app { display:grid; grid-template-columns:300px 1fr 280px; flex:1; height:calc(100vh - 53px); overflow:hidden; }
+      /* HI3D BACKGROUND CANVAS */
+      #bg-canvas {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        width: 100%;
+        height: 100%;
+      }
 
-    /* SIDEBAR */
-    .sidebar { background:var(--surface); border-right:1px solid var(--border); padding:1rem; overflow-y:auto; display:flex; flex-direction:column; gap:1rem; }
-    .section-label { font-size:0.62rem; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:0.5rem; font-family:'Space Mono',monospace; }
-    .drop-zone { border:2px dashed var(--border); border-radius:10px; padding:1.2rem; text-align:center; cursor:pointer; transition:all 0.2s; position:relative; }
-    .drop-zone:hover,.drop-zone.dragover { border-color:var(--accent); background:rgba(124,58,237,0.05); }
-    .drop-zone input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; }
-    .drop-icon { font-size:1.8rem; margin-bottom:0.4rem; }
-    .drop-text { color:var(--muted); font-size:0.75rem; line-height:1.4; }
-    .drop-text strong { color:var(--text); display:block; margin-bottom:0.2rem; }
-    #preview-img { width:100%; border-radius:8px; border:1px solid var(--border); display:none; object-fit:cover; max-height:160px; margin-top:0.5rem; }
-    .detail-tabs { display:grid; grid-template-columns:1fr 1fr 1fr; gap:3px; background:var(--bg); border-radius:8px; padding:3px; }
-    .detail-tab { padding:0.3rem; text-align:center; border-radius:6px; cursor:pointer; font-size:0.72rem; color:var(--muted); transition:all 0.2s; user-select:none; }
-    .detail-tab.active { background:var(--accent); color:white; }
-    .btn { width:100%; padding:0.65rem; border:none; border-radius:8px; font-family:'Syne',sans-serif; font-size:0.85rem; font-weight:700; cursor:pointer; transition:all 0.2s; }
-    .btn-primary { background:linear-gradient(135deg,var(--accent),#6d28d9); color:white; }
-    .btn-primary:hover:not(:disabled) { opacity:0.9; transform:translateY(-1px); }
-    .btn-primary:disabled { opacity:0.5; cursor:not-allowed; }
-    .status-box { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:0.65rem; font-family:'Space Mono',monospace; font-size:0.68rem; color:var(--muted); min-height:2.8rem; line-height:1.6; }
-    .status-box.success { border-color:var(--success); color:var(--success); }
-    .status-box.error { border-color:var(--error); color:var(--error); }
-    .status-box.loading { color:var(--accent2); }
-    .scene-info { background:var(--bg); border-radius:8px; border:1px solid var(--border); padding:0.8rem; font-size:0.72rem; line-height:1.7; display:none; }
-    .scene-info h3 { font-size:0.82rem; margin-bottom:0.35rem; color:var(--accent2); }
-    .scene-info p { color:var(--muted); margin-bottom:0.35rem; font-size:0.68rem; }
-    .obj-pill { display:inline-block; background:rgba(124,58,237,0.15); border:1px solid rgba(124,58,237,0.3); color:var(--accent); padding:2px 6px; border-radius:999px; font-family:'Space Mono',monospace; font-size:0.6rem; margin:2px; cursor:pointer; transition:all 0.2s; }
-    .obj-pill:hover,.obj-pill.active { background:rgba(124,58,237,0.4); }
-    .prompt-row { display:flex; gap:5px; }
-    .prompt-input { flex:1; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:0.45rem 0.65rem; color:var(--text); font-family:'Space Mono',monospace; font-size:0.68rem; outline:none; }
-    .prompt-input:focus { border-color:var(--accent); }
-    .btn-prompt { background:var(--accent); color:white; border:none; border-radius:8px; padding:0.45rem 0.65rem; cursor:pointer; font-size:0.75rem; transition:all 0.2s; white-space:nowrap; }
-    .btn-prompt:hover:not(:disabled) { opacity:0.85; }
-    .btn-prompt:disabled { opacity:0.5; cursor:not-allowed; }
+      /* LIQUID GRADIENT BLOB */
+      #gradient-blob {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      #gradient-blob::before {
+        content: '';
+        position: absolute;
+        width: 700px;
+        height: 700px;
+        border-radius: 50%;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(180, 120, 255, 0.18) 0%,
+          rgba(140, 80, 220, 0.12) 25%,
+          rgba(100, 60, 180, 0.07) 50%,
+          transparent 70%
+        );
+        transform: translate(-50%, -50%);
+        filter: blur(40px);
+        left: var(--mx, 50%);
+        top: var(--my, 50%);
+        will-change: left, top;
+      }
+      #gradient-blob::after {
+        content: '';
+        position: absolute;
+        width: 350px;
+        height: 350px;
+        border-radius: 50%;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(220, 160, 255, 0.22) 0%,
+          rgba(160, 100, 240, 0.14) 35%,
+          transparent 65%
+        );
+        transform: translate(-50%, -50%);
+        filter: blur(18px);
+        left: var(--mx2, 50%);
+        top: var(--my2, 50%);
+        will-change: left, top;
+      }
+      #page-home,
+      #page-about {
+        position: relative;
+        z-index: 1;
+      }
 
-    /* VIEWER */
-    .viewer { position:relative; background:#050508; overflow:hidden; }
-    #three-canvas { width:100%; height:100%; display:block; }
-    .viewer-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:1rem; pointer-events:none; }
-    .placeholder-text { color:var(--muted); font-size:0.85rem; text-align:center; opacity:0.6; }
-    .spinner { width:34px; height:34px; border:3px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; display:none; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-    .viewer-controls { position:absolute; bottom:0.8rem; right:0.8rem; display:flex; gap:0.35rem; flex-wrap:wrap; justify-content:flex-end; }
-    .v-btn { background:rgba(18,18,26,0.85); border:1px solid var(--border); color:var(--text); padding:0.3rem 0.55rem; border-radius:6px; cursor:pointer; font-size:0.65rem; backdrop-filter:blur(8px); transition:all 0.2s; font-family:'Space Mono',monospace; }
-    .v-btn:hover { border-color:var(--accent); color:var(--accent); }
-    .hint { position:absolute; bottom:0.8rem; left:0.8rem; font-size:0.6rem; color:var(--muted); font-family:'Space Mono',monospace; opacity:0.6; }
-    .select-hint { position:absolute; top:0.8rem; left:50%; transform:translateX(-50%); font-size:0.62rem; color:var(--accent2); font-family:'Space Mono',monospace; background:rgba(18,18,26,0.85); padding:3px 10px; border-radius:999px; border:1px solid var(--border); display:none; white-space:nowrap; }
+      /* CURSOR */
+      .cursor {
+        width: 8px;
+        height: 8px;
+        background: var(--lilac-bright);
+        border-radius: 50%;
+        position: fixed;
+        pointer-events: none;
+        z-index: 9999;
+        transform: translate(-50%, -50%);
+        mix-blend-mode: screen;
+      }
+      .cursor-ring {
+        width: 30px;
+        height: 30px;
+        border: 1px solid rgba(183, 168, 191, 0.4);
+        border-radius: 50%;
+        position: fixed;
+        pointer-events: none;
+        z-index: 9998;
+        transform: translate(-50%, -50%);
+        transition: all 0.12s ease;
+      }
 
-    /* EDITOR PANEL */
-    .editor-panel { background:var(--surface); border-left:1px solid var(--border); padding:1rem; overflow-y:auto; display:flex; flex-direction:column; gap:0.8rem; }
-    .editor-empty { color:var(--muted); font-size:0.72rem; text-align:center; margin-top:1.5rem; line-height:1.8; }
-    .selected-label { font-size:0.82rem; font-weight:700; color:var(--accent2); margin-bottom:0.4rem; }
-    .prop-row { display:flex; flex-direction:column; gap:0.25rem; margin-bottom:0.6rem; }
-    .prop-label { font-size:0.62rem; color:var(--muted); font-family:'Space Mono',monospace; letter-spacing:1px; text-transform:uppercase; display:flex; justify-content:space-between; }
-    .prop-label span { color:var(--accent2); font-size:0.68rem; }
-    input[type="range"] { width:100%; accent-color:var(--accent); cursor:pointer; height:3px; }
-    input[type="color"] { width:100%; height:32px; border:1px solid var(--border); border-radius:6px; cursor:pointer; background:none; padding:2px; }
-    select.prop-select { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:0.35rem 0.5rem; font-family:'Space Mono',monospace; font-size:0.68rem; outline:none; cursor:pointer; }
-    select.prop-select:focus { border-color:var(--accent); }
-    .divider { height:1px; background:var(--border); margin:0.2rem 0; }
-    .xyz-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; }
-    .xyz-input { background:var(--bg); border:1px solid var(--border); border-radius:5px; color:var(--text); padding:0.3rem 0.4rem; font-family:'Space Mono',monospace; font-size:0.65rem; width:100%; outline:none; text-align:center; }
-    .xyz-input:focus { border-color:var(--accent); }
-    .xyz-labels { display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin-bottom:2px; }
-    .xyz-label { font-size:0.58rem; color:var(--muted); text-align:center; font-family:'Space Mono',monospace; }
-    .export-btns { display:flex; flex-direction:column; gap:0.4rem; }
-    .btn-export { width:100%; padding:0.5rem; border:none; border-radius:7px; font-family:'Space Mono',monospace; font-size:0.68rem; cursor:pointer; transition:all 0.2s; font-weight:700; }
-    .btn-glb { background:linear-gradient(135deg,#059669,#047857); color:white; }
-    .btn-obj { background:linear-gradient(135deg,#0369a1,#075985); color:white; }
-    .btn-stl { background:linear-gradient(135deg,#7c3aed,#6d28d9); color:white; }
-    .btn-json { background:linear-gradient(135deg,#b45309,#92400e); color:white; }
-    .btn-export:hover { opacity:0.85; transform:translateY(-1px); }
-    .btn-export:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
-    .history-list { display:flex; flex-direction:column; gap:0.4rem; max-height:120px; overflow-y:auto; }
-    .history-item { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.4rem 0.6rem; font-family:'Space Mono',monospace; font-size:0.62rem; color:var(--muted); cursor:pointer; display:flex; justify-content:space-between; align-items:center; transition:all 0.2s; }
-    .history-item:hover { border-color:var(--accent); color:var(--text); }
-    .history-item .restore-btn { color:var(--accent); font-size:0.58rem; }
-  </style>
-</head>
-<body>
-<header>
-  <div class="logo">ImageCAD AI</div>
-  <span class="badge">Groq Vision</span>
-  <div class="header-right">
-    <button class="btn-sm" id="btn-snapshot" disabled>📸 Save Version</button>
-    <button class="btn-sm green" id="btn-export-glb-top" disabled>⬇ Export GLB</button>
-  </div>
-</header>
+      /* NAV */
+      nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 500;
+        height: 54px;
+        display: flex;
+        align-items: center;
+        padding: 0 1.8rem;
+        background: rgba(15, 13, 18, 0.95);
+        backdrop-filter: blur(24px);
+        border-bottom: 1px solid var(--border-dark);
+      }
+      nav.scrolled {
+        border-color: var(--border-mid);
+      }
+      .nav-logo {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 1.4rem;
+        letter-spacing: 2.5px;
+        color: var(--text);
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .nav-logo em {
+        color: var(--lilac);
+        font-style: normal;
+      }
+      .nav-logo-dot {
+        width: 7px;
+        height: 7px;
+        background: var(--lilac);
+        border-radius: 50%;
+        margin-left: 0.1rem;
+      }
+      .nav-badge {
+        margin-left: 0.6rem;
+        font-family: 'DM Mono', monospace;
+        font-size: 0.5rem;
+        letter-spacing: 2px;
+        color: var(--lilac);
+        border: 1px solid var(--border-mid);
+        padding: 2px 8px;
+        border-radius: 999px;
+        text-transform: uppercase;
+        opacity: 0.8;
+      }
+      .nav-links {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 0.15rem;
+      }
+      .nav-link {
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--muted);
+        padding: 0.3rem 0.85rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-family: 'DM Mono', monospace;
+        transition: color 0.2s;
+        border-radius: 4px;
+      }
+      .nav-link:hover,
+      .nav-link.active {
+        color: var(--lilac-bright);
+      }
+      .nav-cta {
+        margin-left: 0.8rem;
+        padding: 0.38rem 1.1rem;
+        background: transparent;
+        border: 1px solid rgba(183, 168, 191, 0.35);
+        color: var(--lilac-bright);
+        border-radius: 4px;
+        font-size: 0.68rem;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        font-family: 'DM Mono', monospace;
+        cursor: pointer;
+        transition: all 0.22s;
+      }
+      .nav-cta:hover {
+        background: rgba(183, 168, 191, 0.12);
+      }
 
-<div class="app">
-  <!-- LEFT SIDEBAR -->
-  <div class="sidebar">
-    <div>
-      <div class="section-label">Input Image</div>
-      <div class="drop-zone" id="drop-zone">
-        <input type="file" id="file-input" accept="image/*" />
-        <div class="drop-icon">🖼️</div>
-        <div class="drop-text"><strong>Drop image here</strong>JPG, PNG, WebP</div>
+      /* PAGE SYSTEM */
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+      }
+      #page-app {
+        display: none;
+      }
+      #page-app.active {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* HOME */
+      #page-home {
+        background: var(--dark);
+      }
+      .hero {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 0 3.5rem 5.5rem;
+        overflow: hidden;
+      }
+      .hero-bg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background:
+          radial-gradient(
+            ellipse 120% 80% at 15% 40%,
+            rgba(180, 150, 210, 0.55) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            ellipse 80% 100% at 80% 10%,
+            rgba(200, 170, 230, 0.45) 0%,
+            transparent 45%
+          ),
+          radial-gradient(
+            ellipse 60% 60% at 60% 80%,
+            rgba(140, 110, 180, 0.4) 0%,
+            transparent 50%
+          ),
+          linear-gradient(
+            135deg,
+            #1a0f2e 0%,
+            #2d1550 30%,
+            #1e0f38 55%,
+            #150a28 80%,
+            #0f0d18 100%
+          );
+        animation: silkPulse 8s ease-in-out infinite alternate;
+      }
+      @keyframes silkPulse {
+        0% {
+          filter: hue-rotate(0deg) brightness(1);
+        }
+        50% {
+          filter: hue-rotate(8deg) brightness(1.08);
+        }
+        100% {
+          filter: hue-rotate(-5deg) brightness(0.95);
+        }
+      }
+      .hero-bg::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse 70% 90% at 25% 25%,
+            rgba(220, 200, 255, 0.35) 0%,
+            transparent 45%
+          ),
+          radial-gradient(
+            ellipse 50% 70% at 75% 70%,
+            rgba(180, 150, 230, 0.3) 0%,
+            transparent 50%
+          );
+        animation: silkSheen 12s ease-in-out infinite alternate-reverse;
+      }
+      @keyframes silkSheen {
+        0% {
+          opacity: 0.6;
+          transform: scale(1) translate(0, 0);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1.08) translate(-15px, -8px);
+        }
+      }
+      .silk-streaks {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      .silk-streaks span {
+        position: absolute;
+        background: linear-gradient(
+          to bottom,
+          transparent,
+          rgba(240, 230, 255, 0.3),
+          transparent
+        );
+        transform-origin: top center;
+        animation: streakDrift linear infinite;
+      }
+      .silk-streaks span:nth-child(1) {
+        left: 5%;
+        width: 2px;
+        top: -20%;
+        height: 80%;
+        transform: rotate(-28deg);
+        animation-duration: 15s;
+      }
+      .silk-streaks span:nth-child(2) {
+        left: 18%;
+        width: 1px;
+        top: -10%;
+        height: 65%;
+        transform: rotate(-16deg);
+        animation-duration: 20s;
+        animation-delay: -5s;
+      }
+      .silk-streaks span:nth-child(3) {
+        left: 33%;
+        width: 2px;
+        top: -28%;
+        height: 85%;
+        transform: rotate(-6deg);
+        animation-duration: 24s;
+        animation-delay: -9s;
+      }
+      .silk-streaks span:nth-child(4) {
+        left: 50%;
+        width: 1px;
+        top: -15%;
+        height: 72%;
+        transform: rotate(8deg);
+        animation-duration: 18s;
+        animation-delay: -3s;
+      }
+      .silk-streaks span:nth-child(5) {
+        left: 65%;
+        width: 2px;
+        top: -5%;
+        height: 60%;
+        transform: rotate(18deg);
+        animation-duration: 22s;
+        animation-delay: -7s;
+      }
+      .silk-streaks span:nth-child(6) {
+        left: 78%;
+        width: 1px;
+        top: -22%;
+        height: 78%;
+        transform: rotate(28deg);
+        animation-duration: 26s;
+        animation-delay: -11s;
+      }
+      .silk-streaks span:nth-child(7) {
+        left: 90%;
+        width: 2px;
+        top: -8%;
+        height: 55%;
+        transform: rotate(36deg);
+        animation-duration: 17s;
+        animation-delay: -4s;
+      }
+      @keyframes streakDrift {
+        0% {
+          opacity: 0;
+        }
+        18% {
+          opacity: 1;
+        }
+        80% {
+          opacity: 0.8;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+      .hero-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 65%;
+        background: linear-gradient(
+          to top,
+          rgba(10, 8, 18, 0.96) 0%,
+          rgba(10, 8, 18, 0.5) 50%,
+          transparent 100%
+        );
+        z-index: 2;
+      }
+      .hero-watermark {
+        position: absolute;
+        right: -1.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: clamp(8rem, 18vw, 16rem);
+        line-height: 0.85;
+        color: transparent;
+        -webkit-text-stroke: 1px rgba(200, 180, 230, 0.05);
+        letter-spacing: -5px;
+        pointer-events: none;
+        user-select: none;
+        z-index: 3;
+        writing-mode: vertical-rl;
+      }
+      .hero-content {
+        position: relative;
+        z-index: 4;
+        max-width: 700px;
+      }
+      .hero-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'DM Mono', monospace;
+        font-size: 0.6rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--lilac);
+        margin-bottom: 1.5rem;
+      }
+      .hero-eyebrow::before {
+        content: '';
+        display: block;
+        width: 28px;
+        height: 1px;
+        background: var(--lilac);
+      }
+      .hero-title {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: clamp(4rem, 9vw, 8rem);
+        line-height: 0.9;
+        letter-spacing: -1px;
+        margin-bottom: 1.5rem;
+      }
+      .hero-title .hl {
+        color: var(--lilac-bright);
+        display: block;
+      }
+      .hero-title .hl2 {
+        color: var(--apricot);
+      }
+      .hero-sub {
+        font-size: 0.9rem;
+        color: var(--muted);
+        line-height: 1.85;
+        max-width: 400px;
+        margin-bottom: 2.5rem;
+        font-weight: 300;
+      }
+      .hero-btns {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      .btn-silk {
+        padding: 0.75rem 2rem;
+        background: linear-gradient(135deg, var(--plum), #6a5572);
+        border: 1px solid rgba(183, 168, 191, 0.25);
+        color: var(--text);
+        font-size: 0.76rem;
+        font-family: 'DM Mono', monospace;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        cursor: pointer;
+        border-radius: 3px;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+      }
+      .btn-silk:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 28px rgba(139, 100, 180, 0.4);
+      }
+      .btn-silk-outline {
+        padding: 0.75rem 2rem;
+        background: transparent;
+        border: 1px solid rgba(183, 168, 191, 0.28);
+        color: var(--muted);
+        font-size: 0.76rem;
+        font-family: 'DM Mono', monospace;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        cursor: pointer;
+        border-radius: 3px;
+        transition: all 0.3s;
+      }
+      .btn-silk-outline:hover {
+        border-color: var(--lilac);
+        color: var(--lilac-bright);
+      }
+      .hero-stats {
+        margin-top: 3rem;
+        display: flex;
+        gap: 3rem;
+        flex-wrap: wrap;
+      }
+      .stat-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+      }
+      .stat-num {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 2.2rem;
+        letter-spacing: 1px;
+        color: var(--text);
+        line-height: 1;
+      }
+      .stat-label {
+        font-size: 0.6rem;
+        color: var(--muted);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-family: 'DM Mono', monospace;
+      }
+      .stat-divider {
+        width: 1px;
+        background: var(--border-dark);
+      }
+
+      .ticker-bar {
+        background: rgba(139, 122, 146, 0.9);
+        overflow: hidden;
+        padding: 0.6rem 0;
+      }
+      .ticker-track {
+        display: flex;
+        animation: ticker 24s linear infinite;
+        white-space: nowrap;
+      }
+      .ticker-item {
+        font-family: 'DM Mono', monospace;
+        font-size: 0.6rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.5);
+        padding: 0 1.8rem;
+        flex-shrink: 0;
+      }
+      .ticker-item.dot {
+        color: rgba(255, 255, 255, 0.22);
+        padding: 0 0.3rem;
+      }
+      @keyframes ticker {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(-50%);
+        }
+      }
+
+      .section-dark {
+        background: var(--dark2);
+        padding: 5rem 3.5rem;
+        position: relative;
+        overflow: hidden;
+      }
+      .section-dark::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--border-mid),
+          transparent
+        );
+      }
+      .section-eyebrow {
+        font-family: 'DM Mono', monospace;
+        font-size: 0.58rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--lilac);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .section-eyebrow::before {
+        content: '';
+        display: block;
+        width: 18px;
+        height: 1px;
+        background: var(--lilac);
+      }
+      .section-big-title {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: clamp(2.5rem, 5vw, 4.5rem);
+        letter-spacing: -1px;
+        line-height: 0.95;
+        margin-bottom: 3rem;
+        color: var(--text);
+      }
+      .section-big-title em {
+        color: var(--lilac-bright);
+        font-style: normal;
+      }
+      .services-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1px;
+        background: var(--border-dark);
+        border: 1px solid var(--border-dark);
+      }
+      .service-card {
+        background: var(--dark2);
+        padding: 2.2rem 2rem;
+        position: relative;
+        overflow: hidden;
+        transition: background 0.3s;
+      }
+      .service-card:hover {
+        background: var(--dark3);
+      }
+      .service-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 1px;
+        background: var(--lilac);
+        transition: width 0.4s ease;
+      }
+      .service-card:hover::after {
+        width: 100%;
+      }
+      .service-icon {
+        width: 42px;
+        height: 42px;
+        margin-bottom: 1.4rem;
+        border: 1px solid var(--border-mid);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        border-radius: 2px;
+        background: rgba(183, 168, 191, 0.05);
+        transition: all 0.3s;
+      }
+      .service-card:hover .service-icon {
+        background: rgba(183, 168, 191, 0.12);
+        border-color: var(--lilac);
+      }
+      .service-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.55rem;
+      }
+      .service-desc {
+        font-size: 0.77rem;
+        color: var(--muted);
+        line-height: 1.85;
+      }
+      .service-num {
+        position: absolute;
+        top: 1.4rem;
+        right: 1.4rem;
+        font-family: 'DM Mono', monospace;
+        font-size: 0.58rem;
+        color: var(--border-mid);
+        letter-spacing: 1px;
+      }
+
+      .what-section {
+        padding: 5rem 3.5rem;
+        background: var(--dark);
+        position: relative;
+      }
+      .what-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--border-mid),
+          transparent
+        );
+      }
+      .what-inner {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        gap: 5rem;
+        align-items: start;
+      }
+      .what-left {
+        position: sticky;
+        top: 70px;
+      }
+      .what-body {
+        font-size: 0.88rem;
+        color: var(--muted);
+        line-height: 2;
+        font-weight: 300;
+      }
+      .what-body + .what-body {
+        margin-top: 1.5rem;
+      }
+      .view-all-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+        font-family: 'DM Mono', monospace;
+        font-size: 0.68rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--lilac);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        transition: gap 0.2s;
+      }
+      .view-all-btn:hover {
+        gap: 0.9rem;
+      }
+      .view-all-btn::after {
+        content: '→';
+      }
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(26px);
+        transition:
+          opacity 0.7s ease,
+          transform 0.7s ease;
+      }
+      .reveal.in {
+        opacity: 1;
+        transform: none;
+      }
+      .reveal-left {
+        opacity: 0;
+        transform: translateX(-26px);
+        transition:
+          opacity 0.7s ease,
+          transform 0.7s ease;
+      }
+      .reveal-left.in {
+        opacity: 1;
+        transform: none;
+      }
+      .d1 {
+        transition-delay: 0.1s;
+      }
+      .d2 {
+        transition-delay: 0.2s;
+      }
+      .d3 {
+        transition-delay: 0.3s;
+      }
+      .d4 {
+        transition-delay: 0.4s;
+      }
+
+      /* ABOUT */
+      #page-about {
+        background: var(--dark);
+        color: var(--text);
+        padding-top: 54px;
+      }
+      .about-hero {
+        position: relative;
+        min-height: 72vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 5rem 3.5rem;
+        overflow: hidden;
+      }
+      .about-hero-bg {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background:
+          radial-gradient(
+            ellipse 80% 60% at 20% 50%,
+            rgba(183, 168, 191, 0.16) 0%,
+            transparent 55%
+          ),
+          radial-gradient(
+            ellipse 60% 70% at 75% 30%,
+            rgba(220, 195, 216, 0.12) 0%,
+            transparent 50%
+          ),
+          linear-gradient(135deg, #0f0d12 0%, #1a1228 100%);
+      }
+      .about-hero-content {
+        position: relative;
+        z-index: 1;
+        max-width: 820px;
+      }
+      .about-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: 'DM Mono', monospace;
+        font-size: 0.58rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--sage);
+        border: 1px solid rgba(184, 199, 179, 0.25);
+        padding: 3px 12px;
+        border-radius: 999px;
+        margin-bottom: 2rem;
+      }
+      .about-tag::before {
+        content: '';
+        display: block;
+        width: 6px;
+        height: 6px;
+        background: var(--sage);
+        border-radius: 50%;
+      }
+      .about-h1 {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: clamp(3.5rem, 8vw, 7rem);
+        line-height: 0.9;
+        letter-spacing: -1px;
+        margin-bottom: 1.5rem;
+      }
+      .about-h1 em {
+        color: var(--lilac-bright);
+        font-style: normal;
+      }
+      .about-h1 .line2 {
+        color: var(--apricot);
+      }
+      .about-sub {
+        max-width: 560px;
+        color: var(--muted);
+        line-height: 1.9;
+        font-size: 0.9rem;
+        font-weight: 300;
+      }
+      .about-stats-bar {
+        position: relative;
+        z-index: 1;
+        margin-top: 3.5rem;
+        padding-top: 2.5rem;
+        border-top: 1px solid var(--border-dark);
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+      }
+      .about-stat {
+        padding: 0 2rem 0 0;
+        border-right: 1px solid var(--border-dark);
+      }
+      .about-stat:last-child {
+        border-right: none;
+        padding-left: 2rem;
+      }
+      .about-stat-num {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 2.6rem;
+        color: var(--text);
+        line-height: 1;
+      }
+      .about-stat-num em {
+        color: var(--lilac-bright);
+        font-style: normal;
+        font-size: 2rem;
+      }
+      .about-stat-label {
+        font-family: 'DM Mono', monospace;
+        font-size: 0.58rem;
+        color: var(--muted);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-top: 0.2rem;
+      }
+      .about-what {
+        background: var(--dark2);
+        padding: 5rem 3.5rem;
+        position: relative;
+      }
+      .about-what::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--border-mid),
+          transparent
+        );
+      }
+      .about-what-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.3fr;
+        gap: 5rem;
+        align-items: start;
+      }
+      .about-what-left {
+        position: sticky;
+        top: 70px;
+      }
+      .about-what-title {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: clamp(3rem, 6vw, 5.5rem);
+        line-height: 0.9;
+        color: var(--text);
+      }
+      .about-what-title em {
+        color: var(--lilac-bright);
+        font-style: normal;
+        display: block;
+      }
+      .about-divider {
+        width: 38px;
+        height: 2px;
+        background: var(--lilac);
+        margin: 1.5rem 0;
+      }
+      .about-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        background: var(--border-dark);
+      }
+      .about-card {
+        background: var(--dark2);
+        padding: 1.7rem 1.5rem;
+        display: grid;
+        grid-template-columns: 48px 1fr auto;
+        align-items: center;
+        gap: 1.3rem;
+        position: relative;
+        overflow: hidden;
+        transition: background 0.3s;
+      }
+      .about-card:hover {
+        background: var(--dark3);
+      }
+      .about-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 1px;
+        background: var(--lilac);
+        transition: width 0.4s;
+      }
+      .about-card:hover::after {
+        width: 100%;
+      }
+      .about-card-icon {
+        width: 46px;
+        height: 46px;
+        border: 1px solid var(--border-mid);
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        background: rgba(183, 168, 191, 0.04);
+        flex-shrink: 0;
+        transition: all 0.3s;
+      }
+      .about-card:hover .about-card-icon {
+        background: rgba(183, 168, 191, 0.12);
+        border-color: var(--lilac);
+      }
+      .about-card-title {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 0.22rem;
+      }
+      .about-card-desc {
+        font-size: 0.73rem;
+        color: var(--muted);
+        line-height: 1.75;
+      }
+      .about-card-num {
+        font-family: 'DM Mono', monospace;
+        font-size: 0.56rem;
+        color: var(--border-mid);
+        flex-shrink: 0;
+      }
+      .about-services {
+        padding: 5rem 3.5rem;
+        background: var(--dark);
+        position: relative;
+      }
+      .about-services::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--border-mid),
+          transparent
+        );
+      }
+      .about-services-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-bottom: 3rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+      .about-services-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1px;
+        background: var(--border-dark);
+        border: 1px solid var(--border-dark);
+      }
+      .about-svc {
+        background: var(--dark);
+        padding: 2rem 1.6rem;
+        position: relative;
+        overflow: hidden;
+        transition: background 0.3s;
+      }
+      .about-svc:hover {
+        background: var(--dark3);
+      }
+      .about-svc::before {
+        content: attr(data-num);
+        position: absolute;
+        top: 0.8rem;
+        right: 1rem;
+        font-family: 'DM Mono', monospace;
+        font-size: 0.52rem;
+        color: var(--border-mid);
+      }
+      .about-svc-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.9rem;
+        display: block;
+      }
+      .about-svc-title {
+        font-weight: 600;
+        font-size: 0.88rem;
+        margin-bottom: 0.38rem;
+        color: var(--text);
+      }
+      .about-svc-desc {
+        font-size: 0.73rem;
+        color: var(--muted);
+        line-height: 1.78;
+      }
+      .about-svc-line {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--lilac), var(--apricot));
+        transition: width 0.4s;
+      }
+      .about-svc:hover .about-svc-line {
+        width: 100%;
+      }
+      .about-stack {
+        background: var(--dark2);
+        padding: 4rem 3.5rem;
+        position: relative;
+      }
+      .about-stack::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--border-mid),
+          transparent
+        );
+      }
+      .about-stack-inner {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 4rem;
+        align-items: start;
+      }
+      .about-stack-left {
+        position: sticky;
+        top: 70px;
+      }
+      .about-stack-title {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 2.8rem;
+        letter-spacing: -0.5px;
+        color: var(--text);
+      }
+      .about-stack-title em {
+        color: var(--lilac-bright);
+        font-style: normal;
+      }
+      .about-stack-sub {
+        font-size: 0.78rem;
+        color: var(--muted);
+        line-height: 1.85;
+        margin-top: 0.6rem;
+      }
+      .stack-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+      }
+      .stack-pill {
+        padding: 0.36rem 0.95rem;
+        border-radius: 999px;
+        background: rgba(183, 168, 191, 0.06);
+        border: 1px solid var(--border-mid);
+        font-size: 0.7rem;
+        color: var(--lilac);
+        font-weight: 500;
+        font-family: 'DM Mono', monospace;
+        letter-spacing: 0.5px;
+        transition: all 0.2s;
+        cursor: default;
+      }
+      .stack-pill:hover {
+        background: var(--plum);
+        color: var(--text);
+        border-color: var(--plum);
+        transform: translateY(-2px);
+      }
+      .about-cta {
+        background: linear-gradient(135deg, #1a1228 0%, #1e1a28 100%);
+        padding: 5rem 3.5rem;
+        position: relative;
+        overflow: hidden;
+      }
+      .about-cta::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse 60% 70% at 20% 50%,
+          rgba(183, 168, 191, 0.12) 0%,
+          transparent 55%
+        );
+      }
+      .about-cta-inner {
+        position: relative;
+        z-index: 1;
+        max-width: 700px;
+      }
+      .about-cta-label {
+        font-family: 'DM Mono', monospace;
+        font-size: 0.58rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--sage);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .about-cta-label::before {
+        content: '';
+        display: block;
+        width: 18px;
+        height: 1px;
+        background: var(--sage);
+      }
+      .about-cta h2 {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: clamp(2.8rem, 6vw, 5rem);
+        line-height: 0.9;
+        letter-spacing: -1px;
+        margin-bottom: 1rem;
+      }
+      .about-cta h2 em {
+        color: var(--lilac-bright);
+        font-style: normal;
+      }
+      .about-cta p {
+        color: var(--muted);
+        font-size: 0.87rem;
+        margin-bottom: 2rem;
+        max-width: 420px;
+        line-height: 1.85;
+      }
+
+      /* APP */
+      #page-app.active {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+      }
+      .app-layout {
+        display: grid;
+        grid-template-columns: 256px 1fr 264px;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        margin-top: 54px;
+        height: calc(100vh - 54px);
+      }
+      .sidebar {
+        background: var(--dark2);
+        border-right: 1px solid var(--border-dark);
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-width: 0;
+      }
+      .sidebar-header {
+        padding: 1rem 1.1rem 0.7rem;
+        border-bottom: 1px solid var(--border-dark);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .sidebar-brand {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 1.05rem;
+        letter-spacing: 2px;
+        color: var(--text);
+      }
+      .sidebar-brand em {
+        color: var(--lilac);
+        font-style: normal;
+      }
+      .sb-group {
+        padding: 0.85rem 1.1rem;
+        border-bottom: 1px solid var(--border-dark);
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+      }
+      .sb-group:last-child {
+        border-bottom: none;
+      }
+      .sec-label {
+        font-size: 0.58rem;
+        letter-spacing: 2.5px;
+        color: var(--muted2);
+        text-transform: uppercase;
+        font-family: 'DM Mono', monospace;
+        font-weight: 500;
+        margin-bottom: 0.1rem;
+      }
+      .drop-zone {
+        border: 1px dashed var(--border-mid);
+        border-radius: 6px;
+        padding: 1.1rem 0.9rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+        background: rgba(183, 168, 191, 0.025);
+      }
+      .drop-zone:hover,
+      .drop-zone.dragover {
+        border-color: var(--lilac);
+        background: rgba(183, 168, 191, 0.06);
+      }
+      .drop-zone input[type='file'] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+      .drop-icon {
+        font-size: 1.25rem;
+        margin-bottom: 0.3rem;
+      }
+      .drop-text {
+        color: var(--muted);
+        font-size: 0.7rem;
+        line-height: 1.5;
+      }
+      .drop-text strong {
+        color: var(--text);
+        display: block;
+        font-weight: 600;
+        font-size: 0.75rem;
+        margin-bottom: 0.1rem;
+      }
+      #preview-img {
+        width: 100%;
+        border-radius: 5px;
+        border: 1px solid var(--border-dark);
+        display: none;
+        object-fit: cover;
+        max-height: 120px;
+        margin-top: 0.55rem;
+      }
+      .detail-tabs {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 2px;
+        background: rgba(183, 168, 191, 0.07);
+        border-radius: 5px;
+        padding: 3px;
+        border: 1px solid var(--border-dark);
+      }
+      .detail-tab {
+        padding: 0.3rem;
+        text-align: center;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.68rem;
+        color: var(--muted);
+        transition: all 0.2s;
+        user-select: none;
+        font-family: 'DM Mono', monospace;
+        letter-spacing: 0.5px;
+      }
+      .detail-tab.active {
+        background: rgba(183, 168, 191, 0.18);
+        color: var(--lilac-bright);
+      }
+      .btn {
+        width: 100%;
+        padding: 0.62rem;
+        border: none;
+        border-radius: 5px;
+        font-family: 'DM Mono', monospace;
+        font-size: 0.72rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, var(--plum) 0%, #7a6585 100%);
+        color: var(--text);
+        border: 1px solid rgba(183, 168, 191, 0.18);
+      }
+      .btn-primary:hover:not(:disabled) {
+        opacity: 0.9;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(139, 100, 180, 0.35);
+      }
+      .btn-primary:disabled {
+        opacity: 0.32;
+        cursor: not-allowed;
+      }
+      .status-box {
+        background: rgba(183, 168, 191, 0.03);
+        border: 1px solid var(--border-dark);
+        border-radius: 5px;
+        padding: 0.6rem 0.75rem;
+        font-family: 'DM Mono', monospace;
+        font-size: 0.66rem;
+        color: var(--muted);
+        min-height: 2.6rem;
+        line-height: 1.65;
+        word-break: break-word;
+      }
+      .status-box.success {
+        border-color: rgba(184, 199, 179, 0.35);
+        color: var(--sage);
+      }
+      .status-box.error {
+        border-color: rgba(176, 80, 80, 0.35);
+        color: var(--error);
+      }
+      .status-box.loading {
+        color: var(--lilac);
+      }
+      .scene-info {
+        background: rgba(183, 168, 191, 0.03);
+        border-radius: 5px;
+        border: 1px solid var(--border-dark);
+        padding: 0.75rem 0.8rem;
+        font-size: 0.7rem;
+        line-height: 1.7;
+        display: none;
+      }
+      .scene-info h3 {
+        font-size: 0.78rem;
+        margin-bottom: 0.28rem;
+        color: var(--lilac);
+        font-weight: 600;
+      }
+      .scene-info p {
+        color: var(--muted);
+        margin-bottom: 0.28rem;
+        font-size: 0.64rem;
+      }
+      .obj-pill {
+        display: inline-block;
+        background: rgba(183, 168, 191, 0.08);
+        border: 1px solid rgba(183, 168, 191, 0.18);
+        color: var(--lilac);
+        padding: 1px 7px;
+        border-radius: 999px;
+        font-family: 'DM Mono', monospace;
+        font-size: 0.58rem;
+        margin: 2px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .obj-pill:hover {
+        background: rgba(183, 168, 191, 0.22);
+      }
+      .prompt-row {
+        display: flex;
+        gap: 4px;
+      }
+      .prompt-input {
+        flex: 1;
+        background: rgba(183, 168, 191, 0.04);
+        border: 1px solid var(--border-dark);
+        border-radius: 4px;
+        padding: 0.42rem 0.6rem;
+        color: var(--text);
+        font-family: 'DM Mono', monospace;
+        font-size: 0.66rem;
+        outline: none;
+        transition: border-color 0.2s;
+        min-width: 0;
+      }
+      .prompt-input:focus {
+        border-color: var(--lilac);
+      }
+      .prompt-input::placeholder {
+        color: var(--muted2);
+      }
+      .btn-prompt {
+        background: var(--plum);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 0.42rem 0.75rem;
+        cursor: pointer;
+        font-size: 0.75rem;
+        transition: all 0.2s;
+        flex-shrink: 0;
+      }
+      .btn-prompt:hover:not(:disabled) {
+        background: #7a6882;
+      }
+      .btn-prompt:disabled {
+        opacity: 0.38;
+        cursor: not-allowed;
+      }
+      .history-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.32rem;
+        max-height: 100px;
+        overflow-y: auto;
+      }
+      .history-item {
+        background: rgba(183, 168, 191, 0.03);
+        border: 1px solid var(--border-dark);
+        border-radius: 4px;
+        padding: 0.35rem 0.55rem;
+        font-family: 'DM Mono', monospace;
+        font-size: 0.6rem;
+        color: var(--muted);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s;
+      }
+      .history-item:hover {
+        border-color: var(--lilac);
+        color: var(--text);
+      }
+      .history-item .restore-btn {
+        color: var(--lilac);
+        font-size: 0.56rem;
+        flex-shrink: 0;
+      }
+      .viewer {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        min-width: 0;
+        overflow: hidden;
+        background: #070510;
+      }
+      .viewer::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background:
+          radial-gradient(
+            ellipse 70% 60% at 30% 40%,
+            rgba(120, 90, 160, 0.2) 0%,
+            transparent 55%
+          ),
+          radial-gradient(
+            ellipse 50% 70% at 70% 65%,
+            rgba(100, 70, 140, 0.15) 0%,
+            transparent 50%
+          ),
+          linear-gradient(135deg, #110920 0%, #070510 50%, #0e0718 100%);
+        pointer-events: none;
+      }
+      #three-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        height: 100% !important;
+        display: block;
+        z-index: 1;
+      }
+      .viewer-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 1rem;
+        pointer-events: none;
+      }
+      .placeholder-text {
+        color: var(--muted);
+        font-size: 0.8rem;
+        text-align: center;
+        opacity: 0.45;
+        font-family: 'DM Mono', monospace;
+        line-height: 1.9;
+      }
+      .spinner {
+        width: 26px;
+        height: 26px;
+        border: 2px solid var(--border-dark);
+        border-top-color: var(--lilac);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        display: none;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .viewer-controls {
+        position: absolute;
+        bottom: 1rem;
+        right: 1rem;
+        z-index: 3;
+        display: flex;
+        gap: 0.3rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .v-btn {
+        background: rgba(7, 5, 16, 0.9);
+        border: 1px solid var(--border-dark);
+        color: var(--muted);
+        padding: 0.26rem 0.6rem;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 0.62rem;
+        backdrop-filter: blur(8px);
+        transition: all 0.2s;
+        font-family: 'DM Mono', monospace;
+        letter-spacing: 0.5px;
+      }
+      .v-btn:hover {
+        border-color: var(--lilac);
+        color: var(--lilac);
+      }
+      .hint {
+        position: absolute;
+        bottom: 1rem;
+        left: 1rem;
+        z-index: 3;
+        font-size: 0.56rem;
+        color: var(--muted);
+        font-family: 'DM Mono', monospace;
+        opacity: 0.4;
+        letter-spacing: 0.5px;
+      }
+      .select-hint {
+        position: absolute;
+        top: 0.85rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 3;
+        font-size: 0.6rem;
+        color: var(--lilac);
+        font-family: 'DM Mono', monospace;
+        background: rgba(7, 5, 16, 0.94);
+        padding: 3px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border-dark);
+        display: none;
+        white-space: nowrap;
+        letter-spacing: 0.5px;
+      }
+      .editor-panel {
+        background: var(--dark2);
+        border-left: 1px solid var(--border-dark);
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-width: 0;
+      }
+      .ep-group {
+        padding: 0.9rem 1.1rem;
+        border-bottom: 1px solid var(--border-dark);
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+      }
+      .ep-group:last-child {
+        border-bottom: none;
+      }
+      .ep-group-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.1rem;
+      }
+      .ep-group-label {
+        font-size: 0.58rem;
+        letter-spacing: 2.5px;
+        color: var(--muted2);
+        text-transform: uppercase;
+        font-family: 'DM Mono', monospace;
+        font-weight: 500;
+      }
+      .ep-group-header::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border-dark);
+      }
+      .editor-empty {
+        color: var(--muted);
+        font-size: 0.7rem;
+        text-align: center;
+        padding: 2rem 1rem;
+        line-height: 2.1;
+        font-family: 'DM Mono', monospace;
+        opacity: 0.7;
+      }
+      .selected-label {
+        font-size: 0.76rem;
+        font-weight: 600;
+        color: var(--lilac-bright);
+      }
+      .prop-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+      }
+      .prop-label {
+        font-size: 0.6rem;
+        color: var(--muted);
+        font-family: 'DM Mono', monospace;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .prop-label span {
+        color: var(--lilac-bright);
+        font-size: 0.64rem;
+      }
+      input[type='range'] {
+        width: 100%;
+        accent-color: var(--plum);
+        cursor: pointer;
+        height: 3px;
+      }
+      input[type='color'] {
+        width: 100%;
+        height: 30px;
+        border: 1px solid var(--border-dark);
+        border-radius: 4px;
+        cursor: pointer;
+        background: none;
+        padding: 2px;
+      }
+      select.prop-select {
+        width: 100%;
+        background: rgba(183, 168, 191, 0.04);
+        border: 1px solid var(--border-dark);
+        border-radius: 4px;
+        color: var(--text);
+        padding: 0.32rem 0.5rem;
+        font-family: 'DM Mono', monospace;
+        font-size: 0.65rem;
+        outline: none;
+        cursor: pointer;
+      }
+      select.prop-select:focus {
+        border-color: var(--lilac);
+      }
+      select.prop-select option {
+        background: var(--dark2);
+      }
+      .divider {
+        height: 1px;
+        background: var(--border-dark);
+        margin: 0.1rem 0;
+      }
+      .xyz-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 3px;
+      }
+      .xyz-input {
+        background: rgba(183, 168, 191, 0.04);
+        border: 1px solid var(--border-dark);
+        border-radius: 4px;
+        color: var(--text);
+        padding: 0.28rem 0.25rem;
+        font-family: 'DM Mono', monospace;
+        font-size: 0.62rem;
+        width: 100%;
+        outline: none;
+        text-align: center;
+        transition: border-color 0.15s;
+      }
+      .xyz-input:focus {
+        border-color: var(--lilac);
+      }
+      .xyz-labels {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 3px;
+        margin-bottom: 2px;
+      }
+      .xyz-label {
+        font-size: 0.54rem;
+        color: var(--muted2);
+        text-align: center;
+        font-family: 'DM Mono', monospace;
+      }
+      .scale-btn {
+        background: rgba(183, 168, 191, 0.06);
+        border: 1px solid var(--border-dark);
+        border-radius: 3px;
+        color: var(--muted);
+        padding: 2px 5px;
+        font-size: 0.58rem;
+        cursor: pointer;
+        transition: all 0.15s;
+        font-family: 'DM Mono', monospace;
+      }
+      .scale-btn:hover {
+        border-color: var(--lilac);
+        color: var(--lilac);
+      }
+      .export-btns {
+        display: flex;
+        flex-direction: column;
+        gap: 0.32rem;
+      }
+      .btn-export {
+        width: 100%;
+        padding: 0.46rem 0.5rem;
+        border: none;
+        border-radius: 4px;
+        font-family: 'DM Mono', monospace;
+        font-size: 0.64rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+      .btn-export:hover {
+        opacity: 0.82;
+        transform: translateY(-1px);
+      }
+      .btn-export:disabled {
+        opacity: 0.26;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .btn-export .fmt-badge {
+        font-size: 0.5rem;
+        padding: 1px 5px;
+        border-radius: 3px;
+        letter-spacing: 1px;
+        margin-left: auto;
+        opacity: 0.7;
+      }
+      .btn-glb {
+        background: rgba(110, 124, 108, 0.6);
+        color: white;
+        border: 1px solid rgba(184, 199, 179, 0.25);
+      }
+      .btn-obj {
+        background: rgba(90, 122, 154, 0.65);
+        color: white;
+        border: 1px solid rgba(90, 122, 154, 0.35);
+      }
+      .btn-stl {
+        background: rgba(139, 122, 146, 0.65);
+        color: white;
+        border: 1px solid rgba(183, 168, 191, 0.25);
+      }
+      .btn-json {
+        background: rgba(220, 195, 184, 0.4);
+        color: var(--text);
+        border: 1px solid rgba(220, 195, 184, 0.25);
+      }
+      .btn-sm {
+        background: rgba(183, 168, 191, 0.06);
+        color: var(--text);
+        border: 1px solid var(--border-dark);
+        border-radius: 4px;
+        padding: 0.34rem 0.75rem;
+        font-size: 0.65rem;
+        cursor: pointer;
+        font-family: 'DM Mono', monospace;
+        transition: all 0.15s;
+        width: 100%;
+        letter-spacing: 0.5px;
+      }
+      .btn-sm:hover {
+        border-color: var(--border-mid);
+      }
+      .btn-sm.green {
+        background: rgba(110, 124, 108, 0.45);
+        color: var(--sage);
+        border-color: rgba(184, 199, 179, 0.25);
+      }
+      .btn-sm.green:hover {
+        background: rgba(110, 124, 108, 0.65);
+      }
+      .btn-sm:disabled {
+        opacity: 0.28;
+        cursor: not-allowed;
+      }
+      ::-webkit-scrollbar {
+        width: 3px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border-dark);
+        border-radius: 99px;
+      }
+      .site-footer {
+        background: var(--dark);
+        border-top: 1px solid var(--border-dark);
+        padding: 1.4rem 3.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      .f-logo {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 1rem;
+        letter-spacing: 2px;
+        color: var(--lilac);
+      }
+      .f-copy {
+        font-family: 'DM Mono', monospace;
+        font-size: 0.58rem;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-ring" id="cursor-ring"></div>
+
+    <nav id="main-nav">
+      <div class="nav-logo">
+        Image<em>CAD</em> AI<span class="nav-logo-dot"></span>
       </div>
-      <img id="preview-img" alt="Preview" />
-    </div>
-
-    <div>
-      <div class="section-label">Detail Level</div>
-      <div class="detail-tabs" id="detail-tabs">
-        <div class="detail-tab" data-val="low">Low</div>
-        <div class="detail-tab active" data-val="medium">Medium</div>
-        <div class="detail-tab" data-val="high">High</div>
+      <span class="nav-badge">Groq Vision</span>
+      <div class="nav-links">
+        <button class="nav-link active" data-page="home">Home</button>
+        <button class="nav-link" data-page="about">About</button>
+        <button class="nav-cta" data-page="app">Launch App →</button>
       </div>
-    </div>
+    </nav>
 
-    <button class="btn btn-primary" id="btn-generate" disabled>✦ Generate 3D Scene</button>
+    <!-- HOME -->
+    <div class="page active" id="page-home">
+      <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="silk-streaks">
+          <span></span><span></span><span></span><span></span><span></span
+          ><span></span><span></span>
+        </div>
+        <div class="hero-overlay"></div>
+        <div class="hero-watermark">3D</div>
+        <div class="hero-content">
+          <div class="hero-eyebrow">AI-Powered 3D Reconstruction</div>
+          <h1 class="hero-title">
+            WE TURN<br /><span class="hl">IMAGES</span> INTO
+            <span class="hl2">3D</span>
+          </h1>
+          <p class="hero-sub">
+            Upload any photo. Groq Vision AI reconstructs the object part by
+            part into a fully editable, exportable 3D scene — in seconds.
+          </p>
+          <div class="hero-btns">
+            <button class="btn-silk" data-page="app">Launch App →</button>
+            <button class="btn-silk-outline" data-page="about">
+              How It Works
+            </button>
+          </div>
+          <div class="hero-stats">
+            <div class="stat-item">
+              <span class="stat-num">4+</span
+              ><span class="stat-label">Export Formats</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-num">17B</span
+              ><span class="stat-label">Vision Model</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-num">&lt;5s</span
+              ><span class="stat-label">Generation Time</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-num">∞</span
+              ><span class="stat-label">AI Edits</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-    <div>
-      <div class="section-label">AI Edit Command</div>
-      <div class="prompt-row">
-        <input class="prompt-input" id="prompt-input" placeholder='"make it metallic blue"' />
-        <button class="btn-prompt" id="btn-prompt" disabled>✦</button>
+      <div class="ticker-bar">
+        <div class="ticker-track">
+          <span class="ticker-item">GLB Export</span
+          ><span class="ticker-item dot">·</span>
+          <span class="ticker-item">OBJ Export</span
+          ><span class="ticker-item dot">·</span>
+          <span class="ticker-item">STL Export</span
+          ><span class="ticker-item dot">·</span>
+          <span class="ticker-item">JSON Scene</span
+          ><span class="ticker-item dot">·</span>
+          <span class="ticker-item">AI Scene Edit</span
+          ><span class="ticker-item dot">·</span>
+          <span class="ticker-item">Material Editor</span
+          ><span class="ticker-item dot">·</span>
+          <span class="ticker-item">Version History</span
+          ><span class="ticker-item dot">·</span>
+          <span class="ticker-item">Component Select</span
+          ><span class="ticker-item dot">·</span>
+          <span class="ticker-item">GLB Export</span
+          ><span class="ticker-item dot">·</span>
+          <span class="ticker-item">OBJ Export</span
+          ><span class="ticker-item dot">·</span>
+          <span class="ticker-item">STL Export</span
+          ><span class="ticker-item dot">·</span>
+          <span class="ticker-item">JSON Scene</span
+          ><span class="ticker-item dot">·</span>
+          <span class="ticker-item">AI Scene Edit</span
+          ><span class="ticker-item dot">·</span>
+          <span class="ticker-item">Material Editor</span
+          ><span class="ticker-item dot">·</span>
+          <span class="ticker-item">Version History</span
+          ><span class="ticker-item dot">·</span>
+          <span class="ticker-item">Component Select</span
+          ><span class="ticker-item dot">·</span>
+        </div>
       </div>
+
+      <section class="section-dark">
+        <div class="reveal">
+          <div class="section-eyebrow">Our Services</div>
+          <h2 class="section-big-title">WHAT WE <em>DO?</em></h2>
+        </div>
+        <div class="services-layout">
+          <div class="service-card reveal d1">
+            <div class="service-num">01</div>
+            <div class="service-icon">🧠</div>
+            <div class="service-title">AI Vision Analysis</div>
+            <p class="service-desc">
+              Llama 4 Scout reads your image, identifies every component, and
+              maps each part to geometry automatically with accurate colors.
+            </p>
+          </div>
+          <div class="service-card reveal d2">
+            <div class="service-num">02</div>
+            <div class="service-icon">✏️</div>
+            <div class="service-title">Natural Language Edits</div>
+            <p class="service-desc">
+              Type "make it metallic" or "add a red stripe" and watch the 3D
+              scene update live without any manual tweaking.
+            </p>
+          </div>
+          <div class="service-card reveal d3">
+            <div class="service-num">03</div>
+            <div class="service-icon">🎨</div>
+            <div class="service-title">Component Editor</div>
+            <p class="service-desc">
+              Click any part in the 3D viewer. Edit color, material, metalness,
+              roughness, opacity, position, scale, and rotation.
+            </p>
+          </div>
+          <div class="service-card reveal d4">
+            <div class="service-num">04</div>
+            <div class="service-icon">📦</div>
+            <div class="service-title">4 Export Formats</div>
+            <p class="service-desc">
+              GLB for web/AR. OBJ for Blender. STL for 3D printing. JSON for raw
+              scene data. One click.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="what-section">
+        <div class="what-inner">
+          <div class="what-left reveal-left">
+            <div class="section-eyebrow">About the Tool</div>
+            <h2
+              class="section-big-title"
+              style="font-size: clamp(2rem, 4vw, 3.5rem)"
+            >
+              WHO<br />ARE<br /><em style="color: var(--lilac-bright)">WE?</em>
+            </h2>
+            <button class="view-all-btn" data-page="about">Learn More</button>
+          </div>
+          <div class="reveal" style="padding-top: 0.5rem">
+            <p class="what-body">
+              ImageCAD AI is a browser-based tool that converts ordinary
+              photographs into interactive, editable 3D models. No 3D software
+              experience required. No account. No setup.
+            </p>
+            <p class="what-body">
+              Powered by Groq's LPU hardware and Llama 4 Scout's multimodal
+              vision, the entire reconstruction pipeline runs in under five
+              seconds — from raw image to orbitable 3D scene.
+            </p>
+            <p class="what-body">
+              Every model is immediately editable via natural language or direct
+              property controls, and exportable to formats compatible with
+              Blender, Unity, and 3D printers.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="section-dark"
+        style="text-align: center; padding: 5rem 2rem"
+      >
+        <div class="section-eyebrow reveal" style="justify-content: center">
+          Ready?
+        </div>
+        <h2
+          class="section-big-title reveal"
+          style="font-size: clamp(2.5rem, 6vw, 5rem); letter-spacing: -2px"
+        >
+          START BUILDING <em>NOW</em>
+        </h2>
+        <div
+          class="reveal"
+          style="
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+          "
+        >
+          <button class="btn-silk" data-page="app">Open the App →</button>
+          <button class="btn-silk-outline" data-page="about">Learn More</button>
+        </div>
+      </section>
+
+      <footer class="site-footer">
+        <div class="f-logo">ImageCAD AI</div>
+        <div class="f-copy">Built with Groq + Three.js · 2025</div>
+      </footer>
     </div>
 
-    <div class="section-label" style="margin-bottom:0">Status</div>
-    <div class="status-box" id="status-box">Upload an image to begin...</div>
-
-    <div class="scene-info" id="scene-info">
-      <h3 id="scene-title"></h3>
-      <p id="scene-desc"></p>
-      <div id="scene-objects"></div>
-    </div>
-
-    <div>
-      <div class="section-label">Version History</div>
-      <div class="history-list" id="history-list">
-        <div style="font-size:0.65rem;color:var(--muted);font-family:'Space Mono',monospace">No versions saved yet</div>
+    <!-- ABOUT -->
+    <div class="page" id="page-about">
+      <div class="about-hero">
+        <div class="about-hero-bg"></div>
+        <div class="about-hero-content">
+          <div class="about-tag reveal">Powered by Groq Vision</div>
+          <h1 class="about-h1 reveal d1">
+            WHERE <em>AI</em><br /><span class="line2">MEETS 3D.</span>
+          </h1>
+          <p class="about-sub reveal d2">
+            Any image becomes a fully editable 3D scene. Fast inference,
+            multimodal vision, and real-time controls — in your browser.
+          </p>
+          <div class="about-stats-bar reveal d3">
+            <div class="about-stat">
+              <div class="about-stat-num">4<em>+</em></div>
+              <div class="about-stat-label">Export Formats</div>
+            </div>
+            <div class="about-stat">
+              <div class="about-stat-num">17<em>B</em></div>
+              <div class="about-stat-label">Vision Model Params</div>
+            </div>
+            <div class="about-stat">
+              <div class="about-stat-num">&lt;5<em>s</em></div>
+              <div class="about-stat-label">Generation Time</div>
+            </div>
+            <div class="about-stat">
+              <div class="about-stat-num">∞</div>
+              <div class="about-stat-label">AI Edit Commands</div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-
-  <!-- VIEWER -->
-  <div class="viewer" id="viewer">
-    <canvas id="three-canvas"></canvas>
-    <div class="viewer-overlay" id="viewer-overlay">
-      <div class="spinner" id="spinner"></div>
-      <div class="placeholder-text" id="placeholder-text">
-        Your 3D scene will appear here<br>
-        <span style="font-size:0.7rem;opacity:0.5">Upload an image and click Generate</span>
+      <div class="about-what">
+        <div class="about-what-grid">
+          <div class="about-what-left reveal-left">
+            <div class="section-eyebrow">Core Capabilities</div>
+            <div class="about-what-title">WHAT<br />WE <em>DO?</em></div>
+            <div class="about-divider"></div>
+            <p
+              style="
+                font-size: 0.8rem;
+                color: var(--muted);
+                line-height: 1.85;
+                max-width: 260px;
+              "
+            >
+              Everything you need to go from photo to 3D model — in one tab, in
+              under five seconds.
+            </p>
+            <button
+              class="btn-silk"
+              data-page="app"
+              style="margin-top: 2rem; width: auto; padding: 0.6rem 1.6rem"
+            >
+              Try It Now →
+            </button>
+          </div>
+          <div class="about-cards reveal">
+            <div class="about-card">
+              <div class="about-card-icon">🧠</div>
+              <div>
+                <div class="about-card-title">AI Vision Analysis</div>
+                <div class="about-card-desc">
+                  Llama 4 Scout reads your image, identifies every component,
+                  and maps parts to geometry with accurate color sampling.
+                </div>
+              </div>
+              <div class="about-card-num">01</div>
+            </div>
+            <div class="about-card">
+              <div class="about-card-icon">✏️</div>
+              <div>
+                <div class="about-card-title">Natural Language Edits</div>
+                <div class="about-card-desc">
+                  Type "make it metallic blue" or "add a stripe" and the 3D
+                  scene updates live — no manual tweaking required.
+                </div>
+              </div>
+              <div class="about-card-num">02</div>
+            </div>
+            <div class="about-card">
+              <div class="about-card-icon">🎨</div>
+              <div>
+                <div class="about-card-title">Component Editor</div>
+                <div class="about-card-desc">
+                  Click any 3D part. Edit color, material preset, metalness,
+                  roughness, opacity, position, scale, and rotation.
+                </div>
+              </div>
+              <div class="about-card-num">03</div>
+            </div>
+            <div class="about-card">
+              <div class="about-card-icon">📦</div>
+              <div>
+                <div class="about-card-title">4 Export Formats</div>
+                <div class="about-card-desc">
+                  GLB for web/AR. OBJ for Blender. STL for 3D printing. JSON for
+                  raw scene data. One click.
+                </div>
+              </div>
+              <div class="about-card-num">04</div>
+            </div>
+            <div class="about-card">
+              <div class="about-card-icon">🔁</div>
+              <div>
+                <div class="about-card-title">Version History</div>
+                <div class="about-card-desc">
+                  Save snapshots at any point and restore any previous version
+                  of your scene instantly.
+                </div>
+              </div>
+              <div class="about-card-num">05</div>
+            </div>
+            <div class="about-card">
+              <div class="about-card-icon">⚡</div>
+              <div>
+                <div class="about-card-title">Groq LPU Speed</div>
+                <div class="about-card-desc">
+                  Groq's LPU hardware delivers sub-second token generation. 3D
+                  scenes appear in moments, not minutes.
+                </div>
+              </div>
+              <div class="about-card-num">06</div>
+            </div>
+          </div>
+        </div>
       </div>
+      <div class="about-services">
+        <div class="about-services-header">
+          <div>
+            <div class="section-eyebrow reveal">Technology Stack</div>
+            <h2 class="section-big-title reveal" style="margin-bottom: 0">
+              HOW IT<br /><em>WORKS?</em>
+            </h2>
+          </div>
+          <p
+            class="reveal"
+            style="
+              max-width: 280px;
+              font-size: 0.8rem;
+              color: var(--muted);
+              line-height: 1.85;
+              font-weight: 300;
+            "
+          >
+            Three layers working in concert: vision AI, real-time 3D, and direct
+            manipulation.
+          </p>
+        </div>
+        <div class="about-services-grid">
+          <div class="about-svc reveal d1" data-num="01">
+            <span class="about-svc-icon">👁️</span>
+            <div class="about-svc-title">Multimodal Vision</div>
+            <p class="about-svc-desc">
+              Llama 4 Scout decomposes your image into named geometric
+              primitives with position, scale, color, and material data encoded
+              as structured JSON.
+            </p>
+            <div class="about-svc-line"></div>
+          </div>
+          <div class="about-svc reveal d2" data-num="02">
+            <span class="about-svc-icon">⚡</span>
+            <div class="about-svc-title">Groq Inference</div>
+            <p class="about-svc-desc">
+              Running on Groq's LPU chips, the model produces complete scene
+              descriptions in milliseconds — enabling interactive, real-time
+              iteration.
+            </p>
+            <div class="about-svc-line"></div>
+          </div>
+          <div class="about-svc reveal d3" data-num="03">
+            <span class="about-svc-icon">🌐</span>
+            <div class="about-svc-title">Three.js Renderer</div>
+            <p class="about-svc-desc">
+              Scene JSON parsed and rendered by Three.js with WebGL. Orbit
+              controls, raycasting, shadow maps, and PBR materials run
+              client-side.
+            </p>
+            <div class="about-svc-line"></div>
+          </div>
+          <div class="about-svc reveal d1" data-num="04">
+            <span class="about-svc-icon">🛠️</span>
+            <div class="about-svc-title">Python FastAPI Backend</div>
+            <p class="about-svc-desc">
+              A lightweight FastAPI server proxies Groq requests, handles image
+              encoding, and streams responses back to the browser.
+            </p>
+            <div class="about-svc-line"></div>
+          </div>
+          <div class="about-svc reveal d2" data-num="05">
+            <span class="about-svc-icon">📤</span>
+            <div class="about-svc-title">Open Format Export</div>
+            <p class="about-svc-desc">
+              Three.js exporters generate standards-compliant GLB, OBJ, and STL
+              files. JSON export preserves full scene state.
+            </p>
+            <div class="about-svc-line"></div>
+          </div>
+          <div class="about-svc reveal d3" data-num="06">
+            <span class="about-svc-icon">🕹️</span>
+            <div class="about-svc-title">Zero-Setup UX</div>
+            <p class="about-svc-desc">
+              No account. No install. No 3D expertise. The whole pipeline —
+              upload, generate, edit, export — in one browser tab.
+            </p>
+            <div class="about-svc-line"></div>
+          </div>
+        </div>
+      </div>
+      <div class="about-stack">
+        <div class="about-stack-inner">
+          <div class="about-stack-left reveal-left">
+            <div class="about-stack-title">BUILT<br /><em>WITH.</em></div>
+            <p class="about-stack-sub">
+              Open standards. Fast infrastructure. Real-time WebGL. No vendor
+              lock-in.
+            </p>
+          </div>
+          <div class="stack-pills reveal">
+            <span class="stack-pill">Groq API</span
+            ><span class="stack-pill">Llama 4 Scout Vision</span
+            ><span class="stack-pill">Three.js</span
+            ><span class="stack-pill">FastAPI</span
+            ><span class="stack-pill">Python 3.11</span
+            ><span class="stack-pill">Vite</span
+            ><span class="stack-pill">GLTFExporter</span
+            ><span class="stack-pill">OBJExporter</span
+            ><span class="stack-pill">STLExporter</span
+            ><span class="stack-pill">JavaScript ES Modules</span
+            ><span class="stack-pill">WebGL 2.0</span
+            ><span class="stack-pill">PBR Materials</span
+            ><span class="stack-pill">Raycasting</span>
+          </div>
+        </div>
+      </div>
+      <div class="about-cta">
+        <div class="about-cta-inner reveal">
+          <div class="about-cta-label">Get Started</div>
+          <h2>DROP A PHOTO.<br /><em>WATCH IT BECOME 3D.</em></h2>
+          <p>
+            No account needed. No 3D experience required. Just upload and
+            generate.
+          </p>
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap">
+            <button class="btn-silk" data-page="app">Open the App →</button>
+            <button class="btn-silk-outline" data-page="home">
+              Back to Home
+            </button>
+          </div>
+        </div>
+      </div>
+      <footer class="site-footer">
+        <div class="f-logo">ImageCAD AI</div>
+        <div class="f-copy">Built with Groq + Three.js · 2025</div>
+      </footer>
     </div>
-    <div class="select-hint" id="select-hint">Click any part to select & edit</div>
-    <div class="viewer-controls" id="viewer-controls" style="display:none">
-      <button class="v-btn" id="btn-reset-cam">⊙ Reset</button>
-      <button class="v-btn" id="btn-wireframe">◫ Wireframe</button>
-      <button class="v-btn" id="btn-autorotate">↻ Rotate</button>
-    </div>
-    <div class="hint" id="hint" style="display:none">Drag · Scroll · Right-drag to pan</div>
-  </div>
 
-  <!-- RIGHT EDITOR PANEL -->
-  <div class="editor-panel">
-    <div>
-      <div class="section-label">Component Editor</div>
-      <div class="editor-empty" id="editor-empty">🖱️ Click any part<br>in the viewer<br>to edit properties</div>
-      <div id="editor-controls" style="display:none">
-        <div class="selected-label" id="selected-label">Selected: —</div>
-        <div class="divider"></div>
-
-        <div class="prop-row">
-          <div class="prop-label">Color</div>
-          <input type="color" id="prop-color" value="#888888" />
-        </div>
-
-        <div class="prop-row">
-          <div class="prop-label">Material Preset</div>
-          <select class="prop-select" id="prop-material">
-            <option value="custom">Custom</option>
-            <option value="matte">Matte</option>
-            <option value="metal">Metal</option>
-            <option value="glass">Glass</option>
-            <option value="plastic">Plastic</option>
-            <option value="wood">Wood</option>
-            <option value="rubber">Rubber</option>
-          </select>
-        </div>
-
-        <div class="prop-row">
-          <div class="prop-label">Metalness <span id="val-metalness">0.0</span></div>
-          <input type="range" id="prop-metalness" min="0" max="1" step="0.01" value="0" />
-        </div>
-
-        <div class="prop-row">
-          <div class="prop-label">Roughness <span id="val-roughness">0.6</span></div>
-          <input type="range" id="prop-roughness" min="0" max="1" step="0.01" value="0.6" />
-        </div>
-
-        <div class="prop-row">
-          <div class="prop-label">Opacity <span id="val-opacity">1.0</span></div>
-          <input type="range" id="prop-opacity" min="0.1" max="1" step="0.01" value="1" />
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="prop-row">
-          <div class="prop-label">Position</div>
-          <div class="xyz-labels"><span class="xyz-label">X</span><span class="xyz-label">Y</span><span class="xyz-label">Z</span></div>
-          <div class="xyz-row">
-            <input class="xyz-input" id="pos-x" type="number" step="0.1" value="0" />
-            <input class="xyz-input" id="pos-y" type="number" step="0.1" value="0" />
-            <input class="xyz-input" id="pos-z" type="number" step="0.1" value="0" />
+    <!-- APP -->
+    <div class="page" id="page-app">
+      <div class="app-layout">
+        <div class="sidebar">
+          <div class="sidebar-header">
+            <div class="sidebar-brand">Image<em>CAD</em></div>
+            <span class="nav-badge" style="margin-left: auto">Groq</span>
+          </div>
+          <div class="sb-group">
+            <div class="sec-label">Input Image</div>
+            <div class="drop-zone" id="drop-zone">
+              <input type="file" id="file-input" accept="image/*" />
+              <div class="drop-icon">🖼️</div>
+              <div class="drop-text">
+                <strong>Drop image here</strong>JPG, PNG, WebP
+              </div>
+            </div>
+            <img id="preview-img" alt="Preview" />
+          </div>
+          <div class="sb-group">
+            <div class="sec-label">Detail Level</div>
+            <div class="detail-tabs" id="detail-tabs">
+              <div class="detail-tab" data-val="low">Low</div>
+              <div class="detail-tab active" data-val="medium">Med</div>
+              <div class="detail-tab" data-val="high">High</div>
+            </div>
+          </div>
+          <div class="sb-group">
+            <button class="btn btn-primary" id="btn-generate" disabled>
+              ✦ Generate 3D Scene
+            </button>
+          </div>
+          <div class="sb-group">
+            <div class="sec-label">AI Edit Command</div>
+            <div class="prompt-row">
+              <input
+                class="prompt-input"
+                id="prompt-input"
+                placeholder='"make it metallic blue"'
+              />
+              <button class="btn-prompt" id="btn-prompt" disabled>✦</button>
+            </div>
+          </div>
+          <div class="sb-group">
+            <div class="sec-label">Status</div>
+            <div class="status-box" id="status-box">
+              Upload an image to begin...
+            </div>
+            <div class="scene-info" id="scene-info">
+              <h3 id="scene-title"></h3>
+              <p id="scene-desc"></p>
+              <div id="scene-objects"></div>
+            </div>
+          </div>
+          <div class="sb-group" style="flex: 1">
+            <div class="sec-label">Version History</div>
+            <div class="history-list" id="history-list">
+              <div
+                style="
+                  font-size: 0.6rem;
+                  color: var(--muted2);
+                  font-family: 'DM Mono', monospace;
+                "
+              >
+                No versions saved yet
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="prop-row">
-          <div class="prop-label">Scale
-            <span style="display:flex;gap:4px;align-items:center">
-              <label style="font-size:0.58rem;color:var(--muted);cursor:pointer">
-                <input type="checkbox" id="scale-lock" style="width:auto;accent-color:var(--accent)" checked> Lock
-              </label>
-            </span>
+        <div class="viewer" id="viewer">
+          <canvas id="three-canvas"></canvas>
+          <div class="viewer-overlay" id="viewer-overlay">
+            <div class="spinner" id="spinner"></div>
+            <div class="placeholder-text" id="placeholder-text">
+              Your 3D scene will appear here<br /><span
+                style="font-size: 0.62rem; opacity: 0.5"
+                >Upload an image and click Generate</span
+              >
+            </div>
           </div>
-          <div class="xyz-labels"><span class="xyz-label">X</span><span class="xyz-label">Y</span><span class="xyz-label">Z</span></div>
-          <div class="xyz-row">
-            <input class="xyz-input" id="scale-x" type="number" step="0.1" value="1" min="0.01" />
-            <input class="xyz-input" id="scale-y" type="number" step="0.1" value="1" min="0.01" />
-            <input class="xyz-input" id="scale-z" type="number" step="0.1" value="1" min="0.01" />
+          <div class="select-hint" id="select-hint">
+            Click any part to select &amp; edit
           </div>
-          <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">
-            <button class="scale-btn" data-axis="x" data-dir="1">+X</button>
-            <button class="scale-btn" data-axis="x" data-dir="-1">-X</button>
-            <button class="scale-btn" data-axis="y" data-dir="1">+Y</button>
-            <button class="scale-btn" data-axis="y" data-dir="-1">-Y</button>
-            <button class="scale-btn" data-axis="z" data-dir="1">+Z</button>
-            <button class="scale-btn" data-axis="z" data-dir="-1">-Z</button>
-            <button class="scale-btn" data-axis="all" data-dir="1">+All</button>
-            <button class="scale-btn" data-axis="all" data-dir="-1">-All</button>
+          <div
+            class="viewer-controls"
+            id="viewer-controls"
+            style="display: none"
+          >
+            <button class="v-btn" id="btn-reset-cam">⊙ Reset</button>
+            <button class="v-btn" id="btn-wireframe">◫ Wireframe</button>
+            <button class="v-btn" id="btn-autorotate">↻ Rotate</button>
+          </div>
+          <div class="hint" id="hint" style="display: none">
+            Drag · Scroll · Right-drag to pan
           </div>
         </div>
 
-        <div class="prop-row">
-          <div class="prop-label">Rotation (deg)</div>
-          <div class="xyz-labels"><span class="xyz-label">X</span><span class="xyz-label">Y</span><span class="xyz-label">Z</span></div>
-          <div class="xyz-row">
-            <input class="xyz-input" id="rot-x" type="number" step="1" value="0" />
-            <input class="xyz-input" id="rot-y" type="number" step="1" value="0" />
-            <input class="xyz-input" id="rot-z" type="number" step="1" value="0" />
+        <div class="editor-panel">
+          <div class="ep-group">
+            <div class="ep-group-header">
+              <span class="ep-group-label">Component Editor</span>
+            </div>
+            <div class="editor-empty" id="editor-empty">
+              🖱️ Click any part<br />in the viewer<br />to edit properties
+            </div>
+            <div id="editor-controls" style="display: none">
+              <div class="selected-label" id="selected-label">Selected: —</div>
+              <div class="divider" style="margin: 0.4rem 0"></div>
+              <div class="prop-row">
+                <div class="prop-label">Color</div>
+                <input type="color" id="prop-color" value="#888888" />
+              </div>
+              <div class="prop-row">
+                <div class="prop-label">Material Preset</div>
+                <select class="prop-select" id="prop-material">
+                  <option value="custom">Custom</option>
+                  <option value="matte">Matte</option>
+                  <option value="metal">Metal</option>
+                  <option value="glass">Glass</option>
+                  <option value="plastic">Plastic</option>
+                  <option value="wood">Wood</option>
+                  <option value="rubber">Rubber</option>
+                </select>
+              </div>
+              <div class="prop-row">
+                <div class="prop-label">
+                  Metalness <span id="val-metalness">0.0</span>
+                </div>
+                <input
+                  type="range"
+                  id="prop-metalness"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0"
+                />
+              </div>
+              <div class="prop-row">
+                <div class="prop-label">
+                  Roughness <span id="val-roughness">0.6</span>
+                </div>
+                <input
+                  type="range"
+                  id="prop-roughness"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="0.6"
+                />
+              </div>
+              <div class="prop-row">
+                <div class="prop-label">
+                  Opacity <span id="val-opacity">1.0</span>
+                </div>
+                <input
+                  type="range"
+                  id="prop-opacity"
+                  min="0.1"
+                  max="1"
+                  step="0.01"
+                  value="1"
+                />
+              </div>
+              <div class="divider"></div>
+              <div class="prop-row">
+                <div class="prop-label">Position</div>
+                <div class="xyz-labels">
+                  <span class="xyz-label">X</span
+                  ><span class="xyz-label">Y</span
+                  ><span class="xyz-label">Z</span>
+                </div>
+                <div class="xyz-row">
+                  <input
+                    class="xyz-input"
+                    id="pos-x"
+                    type="number"
+                    step="0.1"
+                    value="0"
+                  /><input
+                    class="xyz-input"
+                    id="pos-y"
+                    type="number"
+                    step="0.1"
+                    value="0"
+                  /><input
+                    class="xyz-input"
+                    id="pos-z"
+                    type="number"
+                    step="0.1"
+                    value="0"
+                  />
+                </div>
+              </div>
+              <div class="prop-row">
+                <div class="prop-label">
+                  Scale
+                  <span style="display: flex; gap: 4px; align-items: center"
+                    ><label
+                      style="
+                        font-size: 0.55rem;
+                        color: var(--muted);
+                        cursor: pointer;
+                      "
+                      ><input
+                        type="checkbox"
+                        id="scale-lock"
+                        style="width: auto; accent-color: var(--plum)"
+                        checked
+                      />
+                      Lock</label
+                    ></span
+                  >
+                </div>
+                <div class="xyz-labels">
+                  <span class="xyz-label">X</span
+                  ><span class="xyz-label">Y</span
+                  ><span class="xyz-label">Z</span>
+                </div>
+                <div class="xyz-row">
+                  <input
+                    class="xyz-input"
+                    id="scale-x"
+                    type="number"
+                    step="0.1"
+                    value="1"
+                    min="0.01"
+                  /><input
+                    class="xyz-input"
+                    id="scale-y"
+                    type="number"
+                    step="0.1"
+                    value="1"
+                    min="0.01"
+                  /><input
+                    class="xyz-input"
+                    id="scale-z"
+                    type="number"
+                    step="0.1"
+                    value="1"
+                    min="0.01"
+                  />
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    gap: 3px;
+                    margin-top: 4px;
+                    flex-wrap: wrap;
+                  "
+                >
+                  <button class="scale-btn" data-axis="x" data-dir="1">
+                    +X</button
+                  ><button class="scale-btn" data-axis="x" data-dir="-1">
+                    -X
+                  </button>
+                  <button class="scale-btn" data-axis="y" data-dir="1">
+                    +Y</button
+                  ><button class="scale-btn" data-axis="y" data-dir="-1">
+                    -Y
+                  </button>
+                  <button class="scale-btn" data-axis="z" data-dir="1">
+                    +Z</button
+                  ><button class="scale-btn" data-axis="z" data-dir="-1">
+                    -Z
+                  </button>
+                  <button class="scale-btn" data-axis="all" data-dir="1">
+                    +All</button
+                  ><button class="scale-btn" data-axis="all" data-dir="-1">
+                    -All
+                  </button>
+                </div>
+              </div>
+              <div class="prop-row">
+                <div class="prop-label">Rotation (deg)</div>
+                <div class="xyz-labels">
+                  <span class="xyz-label">X</span
+                  ><span class="xyz-label">Y</span
+                  ><span class="xyz-label">Z</span>
+                </div>
+                <div class="xyz-row">
+                  <input
+                    class="xyz-input"
+                    id="rot-x"
+                    type="number"
+                    step="1"
+                    value="0"
+                  /><input
+                    class="xyz-input"
+                    id="rot-y"
+                    type="number"
+                    step="1"
+                    value="0"
+                  /><input
+                    class="xyz-input"
+                    id="rot-z"
+                    type="number"
+                    step="1"
+                    value="0"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="ep-group">
+            <div class="ep-group-header">
+              <span class="ep-group-label">Export</span>
+            </div>
+            <div class="export-btns">
+              <button class="btn-export btn-glb" id="btn-export-glb" disabled>
+                ⬇ Download GLB <span class="fmt-badge">WEB / AR</span>
+              </button>
+              <button class="btn-export btn-obj" id="btn-export-obj" disabled>
+                ⬇ Download OBJ <span class="fmt-badge">BLENDER</span>
+              </button>
+              <button class="btn-export btn-stl" id="btn-export-stl" disabled>
+                ⬇ Download STL <span class="fmt-badge">PRINT</span>
+              </button>
+              <button class="btn-export btn-json" id="btn-export-json" disabled>
+                ⬇ Download JSON <span class="fmt-badge">DATA</span>
+              </button>
+            </div>
+          </div>
+          <div class="ep-group">
+            <div class="ep-group-header">
+              <span class="ep-group-label">Scene</span>
+            </div>
+            <button class="btn-sm" id="btn-snapshot" disabled>
+              📸 Save Version
+            </button>
+            <button class="btn-sm green" id="btn-export-glb-top" disabled>
+              ⬇ Quick Export GLB
+            </button>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="divider"></div>
+    <script>
+      /* ═══ CURSOR ═══════════════════════════════════════════ */
+      const cur = document.getElementById('cursor')
+      const ring = document.getElementById('cursor-ring')
+      let mx = 0,
+        my = 0,
+        rx = 0,
+        ry = 0
+      document.addEventListener('mousemove', (e) => {
+        mx = e.clientX
+        my = e.clientY
+      })
+      ;(function cursorLoop() {
+        rx += (mx - rx) * 0.14
+        ry += (my - ry) * 0.14
+        cur.style.left = mx + 'px'
+        cur.style.top = my + 'px'
+        ring.style.left = rx + 'px'
+        ring.style.top = ry + 'px'
+        requestAnimationFrame(cursorLoop)
+      })()
 
-    <div>
-      <div class="section-label">Export</div>
-      <div class="export-btns">
-        <button class="btn-export btn-glb" id="btn-export-glb" disabled>⬇ Download .GLB</button>
-        <button class="btn-export btn-obj" id="btn-export-obj" disabled>⬇ Download .OBJ</button>
-        <button class="btn-export btn-stl" id="btn-export-stl" disabled>⬇ Download .STL</button>
-        <button class="btn-export btn-json" id="btn-export-json" disabled>⬇ Download .JSON</button>
-      </div>
-      <div style="font-size:0.6rem;color:var(--muted);font-family:'Space Mono',monospace;line-height:1.6;margin-top:0.5rem">
-        GLB → Web/AR/Games<br>OBJ → Blender/Maya<br>STL → 3D Printing<br>JSON → Scene Data
-      </div>
-    </div>
-  </div>
-</div>
+      /* ═══ LIQUID GRADIENT BLOB ══════════════════════════════ */
+      const blobEl = document.createElement('div')
+      blobEl.id = 'gradient-blob'
+      document.body.prepend(blobEl)
 
-<script type="module" src="/src/main.js"></script>
-</body>
+      let bx1 = innerWidth / 2,
+        by1 = innerHeight / 2
+      let bx2 = innerWidth / 2,
+        by2 = innerHeight / 2
+      let tbx = innerWidth / 2,
+        tby = innerHeight / 2
+
+      document.addEventListener('mousemove', (e) => {
+        tbx = e.clientX
+        tby = e.clientY
+      })
+      ;(function blobLoop() {
+        bx1 += (tbx - bx1) * 0.1
+        by1 += (tby - by1) * 0.1
+        bx2 += (tbx - bx2) * 0.045
+        by2 += (tby - by2) * 0.045
+        blobEl.style.setProperty('--mx', bx1 + 'px')
+        blobEl.style.setProperty('--my', by1 + 'px')
+        blobEl.style.setProperty('--mx2', bx2 + 'px')
+        blobEl.style.setProperty('--my2', by2 + 'px')
+        requestAnimationFrame(blobLoop)
+      })()
+
+      /* ═══ CHARACTER GRID (Hi3D style) ═══════════════════════ */
+      const bgCanvas = document.createElement('canvas')
+      bgCanvas.id = 'bg-canvas'
+      document.body.prepend(bgCanvas)
+      const bgCtx = bgCanvas.getContext('2d')
+
+      const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789IMAGECAD3D'
+      const CW = 18,
+        CH = 22
+      const RADIUS = 12
+
+      let cols, rows, cells
+      let mgx = -999,
+        mgy = -999
+
+      function initGrid() {
+        bgCanvas.width = innerWidth
+        bgCanvas.height = innerHeight
+        cols = Math.ceil(innerWidth / CW) + 1
+        rows = Math.ceil(innerHeight / CH) + 1
+        cells = Array.from({ length: rows }, () =>
+          Array.from({ length: cols }, () => ({
+            ch: CHARS[Math.floor(Math.random() * CHARS.length)],
+            bright: Math.random() * 0.03,
+            target: Math.random() * 0.03,
+            vel: 0,
+            swap: Math.random() * 5000,
+          })),
+        )
+      }
+      initGrid()
+      addEventListener('resize', initGrid)
+      document.addEventListener('mousemove', (e) => {
+        mgx = e.clientX / CW
+        mgy = e.clientY / CH
+      })
+
+      let lt = 0
+      function drawGrid(ts) {
+        const dt = Math.min(ts - lt, 50)
+        lt = ts
+        bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height)
+        bgCtx.font = '400 ' + Math.round(CH * 0.62) + "px 'DM Mono', monospace"
+        bgCtx.textBaseline = 'top'
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const cell = cells[r][c]
+            const dc = c - mgx,
+              dr = r - mgy
+            const dist = Math.sqrt(dc * dc + dr * dr)
+
+            let glow = 0
+            if (dist < RADIUS) {
+              const t = 1 - dist / RADIUS
+              glow = t * t * (3 - 2 * t)
+            }
+
+            cell.swap -= dt
+            if (cell.swap <= 0) {
+              cell.ch = CHARS[Math.floor(Math.random() * CHARS.length)]
+              if (dist < RADIUS * 0.65) {
+                cell.target = 0.07 + Math.random() * 0.13
+                cell.swap = 55 + Math.random() * 130
+              } else {
+                cell.target = 0.004 + Math.random() * 0.026
+                cell.swap = 800 + Math.random() * 3500
+              }
+            }
+
+            cell.vel += (cell.target - cell.bright) * 0.005
+            cell.vel *= 0.86
+            cell.bright += cell.vel
+
+            const alpha = Math.min(0.95, cell.bright + glow * 0.3)
+            if (alpha < 0.003) continue
+
+            let R, G, B
+            if (glow > 0.08) {
+              const s = Math.sin(ts * 0.0008 + c * 0.22 + r * 0.28)
+              R = Math.round(168 + s * 30)
+              G = Math.round(108 + s * 18)
+              B = Math.round(248 - s * 14)
+            } else {
+              R = 152
+              G = 122
+              B = 192
+            }
+
+            bgCtx.fillStyle =
+              'rgba(' + R + ',' + G + ',' + B + ',' + alpha.toFixed(3) + ')'
+            bgCtx.fillText(cell.ch, c * CW, r * CH)
+          }
+        }
+        requestAnimationFrame(drawGrid)
+      }
+      requestAnimationFrame(drawGrid)
+
+      /* ═══ PAGE ROUTER ════════════════════════════════════════ */
+      const PAGES = { home: 'page-home', about: 'page-about', app: 'page-app' }
+      function showPage(name) {
+        if (!PAGES[name]) return
+        Object.values(PAGES).forEach((id) =>
+          document.getElementById(id).classList.remove('active'),
+        )
+        document.getElementById(PAGES[name]).classList.add('active')
+        document
+          .querySelectorAll('.nav-link')
+          .forEach((l) => l.classList.toggle('active', l.dataset.page === name))
+        window.scrollTo(0, 0)
+        setTimeout(doReveal, 80)
+        if (name === 'app')
+          setTimeout(() => dispatchEvent(new Event('resize')), 120)
+      }
+      document
+        .querySelectorAll('[data-page]')
+        .forEach((el) =>
+          el.addEventListener('click', () => showPage(el.dataset.page)),
+        )
+
+      /* NAV SCROLL */
+      addEventListener(
+        'scroll',
+        () =>
+          document
+            .getElementById('main-nav')
+            .classList.toggle('scrolled', scrollY > 30),
+        { passive: true },
+      )
+
+      /* REVEAL */
+      function doReveal() {
+        document.querySelectorAll('.reveal, .reveal-left').forEach((el) => {
+          if (el.getBoundingClientRect().top < innerHeight - 50)
+            el.classList.add('in')
+        })
+      }
+      addEventListener('scroll', doReveal, { passive: true })
+      doReveal()
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </body>
 </html>
